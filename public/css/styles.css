@@ -7842,3 +7842,44 @@ select {
   color: #fb7185;
   flex: 0 0 auto;
 }
+
+/* Activity answer correctness visual marker */
+.activity-answer-correct-icon {
+  align-items: center;
+  background: rgba(148, 163, 184, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.58);
+  display: inline-flex;
+  font-size: 0.72rem;
+  font-weight: 950;
+  height: 1.35rem;
+  justify-content: center;
+  line-height: 1;
+  width: 1.35rem;
+}
+
+.activity-answer-control:has(.form-check-input:checked) .activity-answer-correct-icon {
+  background: linear-gradient(135deg, #2dd4bf, #67e8f9);
+  border-color: rgba(167, 255, 247, 0.75);
+  color: #062a2f;
+  box-shadow: 0 0.45rem 1rem rgba(45, 212, 191, 0.28);
+}
+
+.activity-answer-control:has(.form-check-input:checked) .form-control {
+  border-color: rgba(88, 255, 247, 0.45);
+}
+
+@media (max-width: 575.98px) {
+  .activity-answer-correct-icon {
+    height: 1.18rem;
+    width: 1.18rem;
+    font-size: 0.64rem;
+  }
+}
+
+/* CSP-safe icon sizing */
+.admin-status-dot {
+  font-size: 0.45rem;
+  line-height: 1;
+}

@@ -15,7 +15,7 @@ const helmetMiddleware = helmet({
     directives: {
       defaultSrc: ["'self'"],
       baseUri: ["'self'"],
-      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net', 'data:'],
       formAction: ["'self'"],
       frameAncestors: ["'self'"],
       imgSrc: ["'self'", 'data:', cloudinarySrc],
@@ -23,6 +23,7 @@ const helmetMiddleware = helmet({
       objectSrc: ["'none'"],
       scriptSrc: ["'self'", 'https://cdn.jsdelivr.net'],
       scriptSrcAttr: ["'none'"],
+      connectSrc: ["'self'"],
       styleSrc: ["'self'", 'https://cdn.jsdelivr.net', 'https://fonts.googleapis.com'],
       upgradeInsecureRequests: [],
     },
