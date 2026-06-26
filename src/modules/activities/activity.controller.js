@@ -14,7 +14,7 @@ function blankQuestions() {
     displayOrder: index,
     answers: [0, 1, 2, 3].map((answerIndex) => ({
       text: '',
-      isCorrect: answerIndex === 0,
+      isCorrect: false,
       displayOrder: answerIndex,
     })),
   }));

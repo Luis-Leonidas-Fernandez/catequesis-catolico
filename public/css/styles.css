@@ -7786,3 +7786,35 @@ select {
     min-width: 0;
   }
 }
+
+/* Activity answer correctness selector polish */
+.activity-answer-correct-choice {
+  gap: 0.45rem;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.activity-answer-correct-choice .form-check-input {
+  cursor: pointer;
+}
+
+.activity-answer-control:has(.form-check-input:checked) {
+  box-shadow: 0 0 0 0.16rem rgba(88, 255, 247, 0.18), 0 1rem 2rem rgba(0, 0, 0, 0.18);
+}
+
+.activity-answer-control:has(.form-check-input:checked) .activity-answer-correct-choice {
+  background: rgba(45, 212, 191, 0.18);
+  border-color: rgba(88, 255, 247, 0.5);
+  color: #a7fff7;
+}
+
+@media (max-width: 575.98px) {
+  .activity-answer-correct-choice {
+    font-size: 0.68rem;
+    letter-spacing: 0.045em;
+  }
+}

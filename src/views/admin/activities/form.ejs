@@ -148,7 +148,7 @@
                   <i class="bi bi-question-circle-fill"></i>
                   Preguntas y respuestas
                 </h3>
-                <p>Marcá una respuesta correcta por pregunta. Dejamos la estructura igual para no romper la validación.</p>
+                <p>Marcá explícitamente cuál respuesta es correcta en cada pregunta. Ninguna queda seleccionada por defecto.</p>
               </div>
 
               <div class="activity-question-list">
@@ -170,15 +170,16 @@
                             Respuesta ${answerIndex + 1}
                           </label>
                           <div class="input-group activity-answer-control">
-                            <span class="input-group-text">
+                            <span class="input-group-text activity-answer-correct-choice">
                               <input
                                 class="form-check-input mt-0"
                                 type="radio"
                                 name="question${questionIndex}CorrectAnswer"
                                 value="${answerIndex + 1}"
-                                aria-label="Respuesta correcta de la pregunta ${questionIndex + 1}"
+                                aria-label="Marcar respuesta ${answerIndex + 1} como correcta para la pregunta ${questionIndex + 1}"
                                 ${answer.isCorrect ? 'checked' : ''}
                               />
+                              <span>Correcta</span>
                             </span>
                             <input
                               class="form-control"
