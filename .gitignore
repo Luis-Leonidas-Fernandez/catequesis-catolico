@@ -12,7 +12,7 @@ src/database/*.sqlite-*
 logs/
 uploads/
 private/
-backups/
+/backups/
 
 # macOS
 .DS_Store
