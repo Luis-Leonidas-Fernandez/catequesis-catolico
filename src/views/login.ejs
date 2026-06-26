@@ -1,0 +1,187 @@
+<%
+  const escapeHtml = (value) => String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+
+  const shellClasses = ['login-shell'];
+  const safeLoginVideoUrl = loginVideoUrl ? escapeHtml(loginVideoUrl) : '';
+  const safeLoginPosterUrl = loginPosterUrl ? escapeHtml(loginPosterUrl) : '';
+
+  if (safeLoginPosterUrl) {
+    shellClasses.push('login-shell--has-poster');
+  }
+
+  const loginBackgroundImageMarkup = safeLoginPosterUrl
+    ? `<img class="login-bg-image" src="${safeLoginPosterUrl}" alt="" aria-hidden="true" loading="eager" decoding="async" />`
+    : '';
+
+  const loginBackgroundVideoMarkup = safeLoginVideoUrl
+    ? `<video class="login-bg-video" autoplay muted loop playsinline preload="metadata" ${safeLoginPosterUrl ? `poster="${safeLoginPosterUrl}"` : ''} aria-hidden="true" tabindex="-1"><source src="${safeLoginVideoUrl}" type="video/mp4"></video>`
+    : '';
+
+  const loginBackgroundMediaMarkup = `${loginBackgroundImageMarkup}${loginBackgroundVideoMarkup}`;
+
+  const requestedActiveMode = typeof activeLoginMode !== 'undefined' ? activeLoginMode : 'catequista';
+  const activeModeId = ['catequista', 'coordinador', 'admin', 'nino'].includes(requestedActiveMode)
+    ? requestedActiveMode
+    : 'catequista';
+
+  const loginModes = [
+    {
+      id: 'catequista',
+      label: 'Catequista',
+      targetPanel: 'adult',
+      title: 'Ingreso catequista',
+      subtitle: 'Entrá con tu usuario de catequista para gestionar grupos, niños, guías y progreso.',
+      isActive: activeModeId === 'catequista',
+    },
+    {
+      id: 'coordinador',
+      label: 'Coordinador',
+      targetPanel: 'adult',
+      title: 'Ingreso coordinador',
+      subtitle: 'Accedé al seguimiento de tu parroquia, grupos, niños y catequistas.',
+      isActive: activeModeId === 'coordinador',
+    },
+    {
+      id: 'admin',
+      label: 'Admin',
+      targetPanel: 'adult',
+      title: 'Ingreso admin',
+      subtitle: 'Usá tu cuenta administrativa para gestionar el sistema completo.',
+      isActive: activeModeId === 'admin',
+    },
+    {
+      id: 'nino',
+      label: 'Niño',
+      targetPanel: 'child',
+      title: 'Ingreso niño',
+      subtitle: 'Entrá con tu código seguro para ver tu perfil, progreso y actividades.',
+      isActive: activeModeId === 'nino',
+    },
+  ];
+
+  const activeMode = loginModes.find((mode) => mode.isActive) || loginModes[0];
+  const isChildPanelActive = activeMode.targetPanel === 'child';
+
+  const loginModeButtons = loginModes.map((mode) => `
+    <button
+      class="login-mode-option${mode.isActive ? ' is-active' : ''}"
+      type="button"
+      data-login-mode="${escapeHtml(mode.id)}"
+      data-target-panel="${escapeHtml(mode.targetPanel)}"
+      data-login-title="${escapeHtml(mode.title)}"
+      data-login-subtitle="${escapeHtml(mode.subtitle)}"
+      aria-pressed="${mode.isActive ? 'true' : 'false'}"
+    >
+      ${escapeHtml(mode.label)}
+    </button>
+  `).join('');
+%>
+
+<%- include('layout', {
+  title,
+  body: `
+    <main class="${shellClasses.join(' ')}">
+      ${loginBackgroundMediaMarkup}
+      <div class="login-overlay" aria-hidden="true"></div>
+
+      <section class="login-content" aria-label="Acceso a Catequesis San Pedro">
+        <div class="login-card">
+          <div class="login-header">
+            <span class="badge text-bg-primary mb-3">Catequesis San Pedro</span>
+            <h1 class="login-title" data-login-title>${escapeHtml(activeMode.title)}</h1>
+            <p class="login-subtitle" data-login-subtitle>${escapeHtml(activeMode.subtitle)}</p>
+          </div>
+
+          <div class="login-mode-switch" role="group" aria-label="Elegí el tipo de ingreso">
+            ${loginModeButtons}
+          </div>
+
+          ${error ? `<div class="alert alert-danger" role="alert">${escapeHtml(error)}</div>` : ''}
+          ${message ? `<div class="alert alert-success" role="status">${escapeHtml(message)}</div>` : ''}
+
+          <form class="login-form login-panel${isChildPanelActive ? '' : ' is-active'}" action="/login" method="post" data-login-panel="adult" novalidate ${isChildPanelActive ? 'hidden' : ''}>
+            <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+
+            <div class="login-field">
+              <label class="form-label" for="email">Email</label>
+              <input
+                class="form-control"
+                id="email"
+                name="email"
+                type="email"
+                value="${escapeHtml(email)}"
+                autocomplete="username"
+                required
+              />
+            </div>
+
+            <div class="login-field">
+              <label class="form-label" for="password">Contraseña</label>
+              <input
+                class="form-control"
+                id="password"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                required
+              />
+            </div>
+
+            <button class="btn btn-primary login-submit" type="submit">
+              Entrar
+            </button>
+          </form>
+
+          <form class="login-form login-panel${isChildPanelActive ? ' is-active' : ''}" action="/acceso-nino" method="post" data-login-panel="child" novalidate ${isChildPanelActive ? '' : 'hidden'}>
+            <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+
+            <div class="login-field">
+              <label class="form-label" for="accessCode">Código seguro</label>
+              <input
+                class="form-control text-uppercase"
+                id="accessCode"
+                name="accessCode"
+                type="text"
+                placeholder="PAZ-7K9Q"
+                autocomplete="one-time-code"
+                inputmode="text"
+                required
+              />
+              <div class="form-text">El código es personal. Si no lo tenés, pedíselo a tu catequista.</div>
+            </div>
+
+            <label class="login-remember-device">
+              <input
+                class="form-check-input"
+                name="rememberDevice"
+                type="checkbox"
+              />
+              <span>
+                Recordar este dispositivo por 30 días
+                <small>No lo uses en celulares o computadoras compartidas.</small>
+              </span>
+            </label>
+
+            <button class="btn btn-primary login-submit" type="submit">
+              Entrar
+            </button>
+          </form>
+
+          <p class="login-secondary-action">
+            ¿Todavía no tenés cuenta de catequista?
+            <a href="/registro-catequista">Registrate acá</a>
+          </p>
+
+          <p class="login-admin-hint">
+            Coordinadores ingresan con invitación. Admins usan su cuenta administrativa.
+          </p>
+        </div>
+      </section>
+    </main>
+  `
+}) %>

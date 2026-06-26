@@ -1,0 +1,130 @@
+<%
+  const totalChildren = children.length;
+  const activeChildren = children.filter((child) => child.is_active).length;
+  const groupsCount = new Set(children.map((child) => child.group_name || 'Sin grupo')).size;
+%>
+
+<%- include('../layout', {
+  title,
+  body: `
+    <main class="dashboard-page admin-resource-page my-children-page">
+      <nav class="navbar navbar-expand-lg dashboard-navbar">
+        <div class="dashboard-navbar__inner">
+          <div class="dashboard-user-nav">
+            <span class="dashboard-user-icon" aria-hidden="true">
+              <i class="bi bi-person-fill"></i>
+            </span>
+            <span class="dashboard-user-role">${escapeHtml(user.role)}</span>
+          </div>
+
+          <form action="/logout" method="post">
+            <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+            <button class="btn dashboard-logout-btn" type="submit" aria-label="Cerrar sesión">
+              <i class="bi bi-box-arrow-right me-1"></i>Salir
+            </button>
+          </form>
+        </div>
+      </nav>
+
+      <section class="dashboard-container admin-resource-container">
+        <header class="admin-resource-hero text-center">
+          <span class="admin-dashboard-eyebrow">
+            <i class="bi bi-emoji-smile-fill"></i>
+            Catequista
+          </span>
+          <h1 class="dashboard-title mb-3">Niños / Catecúmenos</h1>
+          <p class="dashboard-subtitle mb-0">
+            Gestioná solamente los niños asignados a tus grupos. Podés crear nuevos accesos y regenerar códigos seguros.
+          </p>
+        </header>
+
+        <section class="admin-resource-summary my-children-summary" aria-label="Resumen de mis niños">
+          <article class="admin-metric-card admin-resource-summary__card">
+            <span class="admin-metric-card__icon" aria-hidden="true">
+              <i class="bi bi-emoji-smile-fill"></i>
+            </span>
+            <span class="admin-metric-card__label">Niños asignados</span>
+            <strong class="admin-metric-card__value">${totalChildren}</strong>
+          </article>
+
+          <article class="admin-metric-card admin-resource-summary__card">
+            <span class="admin-metric-card__icon" aria-hidden="true">
+              <i class="bi bi-person-check-fill"></i>
+            </span>
+            <span class="admin-metric-card__label">Niños activos</span>
+            <strong class="admin-metric-card__value">${activeChildren}</strong>
+          </article>
+
+          <article class="admin-metric-card admin-resource-summary__card">
+            <span class="admin-metric-card__icon" aria-hidden="true">
+              <i class="bi bi-collection-fill"></i>
+            </span>
+            <span class="admin-metric-card__label">Grupos con niños</span>
+            <strong class="admin-metric-card__value">${totalChildren ? groupsCount : 0}</strong>
+          </article>
+        </section>
+
+        <div class="admin-resource-actions">
+          <a class="btn admin-resource-primary-action" href="/children/my/new">
+            <i class="bi bi-person-plus-fill"></i>
+            Crear niño
+          </a>
+        </div>
+
+        <section class="admin-table-card my-children-panel" aria-labelledby="my-children-title">
+          <div class="admin-table-card__header my-children-panel__header">
+            <div>
+              <h2 id="my-children-title">
+                <i class="bi bi-people-fill"></i>
+                Tus niños
+              </h2>
+              <p>Listado de catecúmenos asociados a los grupos que tenés asignados.</p>
+            </div>
+          </div>
+
+          ${children.length === 0 ? `
+            <div class="admin-table-empty my-children-empty">
+              <i class="bi bi-person-x"></i>
+              <strong>Todavía no tenés niños asignados.</strong>
+              <span>Creá un niño nuevo o esperá a que coordinación asigne catecúmenos a tus grupos.</span>
+            </div>
+          ` : `
+            <div class="my-children-grid">
+              ${children.map((child) => `
+                <article class="admin-metric-card my-child-card">
+                  <span class="my-child-card__status badge ${child.is_active ? 'text-bg-success' : 'text-bg-secondary'}">
+                    <i class="bi bi-circle-fill my-child-card__status-dot"></i>
+                    ${child.is_active ? 'Activo' : 'Inactivo'}
+                  </span>
+
+                  <div class="my-child-card__body">
+                    <span class="admin-table-avatar my-child-card__avatar" aria-hidden="true">
+                      ${escapeHtml(child.first_name.charAt(0).toUpperCase())}
+                    </span>
+                    <h3>${escapeHtml(child.first_name)} ${escapeHtml(child.last_name)}</h3>
+                    <p>${escapeHtml(child.catechesis_level_name)}</p>
+                  </div>
+
+                  <dl class="my-child-card__meta">
+                    <div>
+                      <dt>Grupo</dt>
+                      <dd>${escapeHtml(child.group_name)}</dd>
+                    </div>
+                  </dl>
+
+                  <form class="my-child-card__action" action="/children/${child.id}/regenerate-code" method="post">
+                    <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+                    <button class="btn btn-sm btn-outline-warning" type="submit">
+                      <i class="bi bi-key-fill me-1"></i>
+                      Regenerar código
+                    </button>
+                  </form>
+                </article>
+              `).join('')}
+            </div>
+          `}
+        </section>
+      </section>
+    </main>
+  `
+}) %>

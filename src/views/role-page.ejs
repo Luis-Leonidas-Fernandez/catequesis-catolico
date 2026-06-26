@@ -1,0 +1,75 @@
+<%- include('layout', {
+  title,
+  body: `
+    <main class="dashboard-page admin-resource-page role-dashboard-page">
+      <nav class="navbar navbar-expand-lg dashboard-navbar">
+        <div class="dashboard-navbar__inner">
+          <div class="dashboard-user-nav">
+            <span class="dashboard-user-icon" aria-hidden="true">
+              <i class="bi bi-person-fill"></i>
+            </span>
+            <span class="dashboard-user-role">${escapeHtml(user.role)}</span>
+          </div>
+
+          <form action="/logout" method="post">
+            <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+            <button class="btn dashboard-logout-btn" type="submit" aria-label="Cerrar sesión">
+              <i class="bi bi-box-arrow-right me-1"></i>Salir
+            </button>
+          </form>
+        </div>
+      </nav>
+
+      <section class="dashboard-container admin-resource-container">
+        <header class="admin-resource-hero text-center">
+          <span class="admin-dashboard-eyebrow">
+            <i class="bi bi-diagram-3-fill"></i>
+            ${escapeHtml(badge)}
+          </span>
+          <h1 class="dashboard-title mb-3">${escapeHtml(heading)}</h1>
+          <p class="dashboard-subtitle mb-0">${escapeHtml(description)}</p>
+        </header>
+
+        <section class="admin-form-card role-access-card" aria-labelledby="role-access-title">
+          <div class="admin-form-card__header guides-upload-card__header">
+            <span class="admin-form-card__kicker" aria-hidden="true">
+              <i class="bi bi-person-badge-fill"></i>
+            </span>
+            <h2 id="role-access-title">Datos de acceso</h2>
+            <p>Resumen del usuario autenticado y del espacio habilitado para este rol.</p>
+            <span class="badge text-bg-success"><i class="bi bi-shield-check"></i> Sesión activa</span>
+          </div>
+
+          <div class="admin-form-grid role-access-card__grid" role="group" aria-label="Datos de acceso del usuario">
+            <div class="admin-form-field">
+              <label class="form-label" for="roleUserName">Usuario</label>
+              <input class="form-control" id="roleUserName" value="${escapeHtml(user.name)}" readonly />
+            </div>
+
+            <div class="admin-form-field">
+              <label class="form-label" for="roleUserRole">Rol</label>
+              <input class="form-control" id="roleUserRole" value="${escapeHtml(user.role)}" readonly />
+            </div>
+
+            <div class="admin-form-field admin-form-field--full">
+              <label class="form-label" for="roleAreaName">Área</label>
+              <input class="form-control" id="roleAreaName" value="${escapeHtml(heading)}" readonly />
+            </div>
+
+            <div class="admin-form-field admin-form-field--full">
+              <label class="form-label" for="roleScope">Alcance</label>
+              <textarea class="form-control" id="roleScope" rows="3" readonly>${escapeHtml(description)}</textarea>
+            </div>
+
+            <div class="admin-form-actions">
+              <a class="btn admin-resource-primary-action" href="/dashboard">
+                <i class="bi bi-grid-fill"></i>
+                Volver al dashboard
+              </a>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+  `
+}) %>

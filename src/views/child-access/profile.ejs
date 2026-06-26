@@ -1,0 +1,158 @@
+<%
+  const completedAttempts = Number(profile.completed_attempts || 0);
+  const totalAttempts = Number(profile.total_attempts || 0);
+  const progressLabel = `${completedAttempts} de ${totalAttempts}`;
+  const progressPercent = totalAttempts > 0 ? Math.round((completedAttempts / totalAttempts) * 100) : 0;
+  const safeCurrentUser = currentUser || {};
+%>
+
+<%- include('../layout', {
+  title,
+  body: `
+    <main class="dashboard-page child-profile-page">
+      <nav class="dashboard-navbar child-profile-navbar" aria-label="Navegación principal">
+        <div class="dashboard-navbar__inner ${isAdminPreview ? '' : 'child-profile-navbar__inner'}">
+          ${isAdminPreview ? `
+            <a class="btn btn-outline-secondary child-profile-back-link" href="/admin/children">
+              <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+              Niños
+            </a>
+            <div class="dashboard-user-nav" aria-label="Usuario activo">
+              <span class="dashboard-user-icon" aria-hidden="true">
+                <i class="bi bi-person-fill"></i>
+              </span>
+              <span class="dashboard-user-role">${escapeHtml(safeCurrentUser.role || 'admin')}</span>
+            </div>
+            <form action="/logout" method="post">
+              <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+              <button class="btn dashboard-logout-btn" type="submit">
+                <i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>
+                Salir
+              </button>
+            </form>
+          ` : `
+            <a class="child-profile-navbar__brand" href="/perfil-nino" aria-label="Catequesis San Pedro">
+              <span class="dashboard-user-icon" aria-hidden="true">
+                <i class="bi bi-stars"></i>
+              </span>
+              <span>Catequesis San Pedro</span>
+            </a>
+            <div class="dashboard-navbar__actions child-profile-navbar__actions">
+              <div class="dashboard-user-nav" aria-label="Perfil activo">
+                <span class="dashboard-user-icon" aria-hidden="true">
+                  <i class="bi bi-person-heart"></i>
+                </span>
+                <span class="dashboard-user-role">niño</span>
+              </div>
+              <form action="/salir-nino" method="post">
+                <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+                <button class="btn dashboard-logout-btn" type="submit">
+                  <i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>
+                  Salir
+                </button>
+              </form>
+            </div>
+          `}
+        </div>
+      </nav>
+
+      <section class="dashboard-container child-profile-container">
+        <header class="dashboard-hero child-profile-hero">
+          <span class="admin-dashboard-eyebrow">
+            <i class="bi ${isAdminPreview ? 'bi-eye-fill' : 'bi-heart-fill'}" aria-hidden="true"></i>
+            ${isAdminPreview ? 'Vista administrador' : 'Perfil activo'}
+          </span>
+          <div class="child-profile-identity">
+            <div class="child-profile-avatar child-profile-avatar--premium" aria-hidden="true">
+              ${
+                profile.avatar_path
+                  ? `<img src="${escapeHtml(profile.avatar_path)}" alt="" />`
+                  : `<span>${escapeHtml(String(profile.first_name || '?').charAt(0).toUpperCase())}</span>`
+              }
+            </div>
+            <div>
+              <h1 class="dashboard-title">Hola, ${escapeHtml(profile.first_name)}</h1>
+              <p class="dashboard-subtitle">
+                ${isAdminPreview
+                  ? 'Estás viendo el perfil visual del niño como administrador.'
+                  : 'Jesús camina con vos. Seguí aprendiendo con alegría.'}
+              </p>
+            </div>
+          </div>
+        </header>
+
+        <section class="admin-resource-summary child-profile-summary" aria-label="Resumen del perfil">
+          <article class="admin-metric-card admin-resource-summary__card child-profile-summary-card">
+            <span class="admin-metric-card__icon" aria-hidden="true">
+              <i class="bi bi-people-fill"></i>
+            </span>
+            <span class="admin-metric-card__label">Grupo</span>
+            <span class="admin-metric-card__value child-profile-summary__value">${escapeHtml(profile.group_name)}</span>
+          </article>
+
+          <article class="admin-metric-card admin-resource-summary__card child-profile-summary-card">
+            <span class="admin-metric-card__icon" aria-hidden="true">
+              <i class="bi bi-book-half"></i>
+            </span>
+            <span class="admin-metric-card__label">Nivel</span>
+            <span class="admin-metric-card__value child-profile-summary__value">${escapeHtml(profile.catechesis_level_name)}</span>
+          </article>
+
+          <article class="admin-metric-card admin-resource-summary__card child-profile-summary-card">
+            <span class="admin-metric-card__icon" aria-hidden="true">
+              <i class="bi bi-building-heart"></i>
+            </span>
+            <span class="admin-metric-card__label">Parroquia</span>
+            <span class="admin-metric-card__value child-profile-summary__value">${escapeHtml(profile.parish_name)}</span>
+          </article>
+        </section>
+
+        <section class="admin-form-card child-profile-progress-card" aria-labelledby="child-profile-progress-title">
+          <div class="admin-form-card__header child-profile-progress-card__header">
+            <span class="admin-form-card__kicker" aria-hidden="true">
+              <i class="bi bi-star-fill"></i>
+            </span>
+            <div>
+              <h2 id="child-profile-progress-title">
+                <i class="bi bi-bar-chart-line-fill" aria-hidden="true"></i>
+                Progreso general
+              </h2>
+              <p>${escapeHtml(progressLabel)} intentos completados registrados hasta ahora.</p>
+            </div>
+          </div>
+
+          <div class="child-profile-progress-body">
+            <div class="child-profile-progress-ring" aria-label="Progreso ${progressPercent}%">
+              <span>${progressPercent}%</span>
+            </div>
+            <div class="child-profile-progress-copy">
+              <strong>${completedAttempts} actividades completadas</strong>
+              <span>sobre ${totalAttempts} intentos registrados.</span>
+            </div>
+          </div>
+        </section>
+
+        <div class="child-profile-actions">
+          <a class="btn admin-resource-primary-action" href="/nino/actividades">
+            <i class="bi bi-play-circle-fill me-1" aria-hidden="true"></i>
+            Ver actividades
+          </a>
+          <a class="btn btn-outline-secondary" href="/nino/guias">
+            <i class="bi bi-file-earmark-pdf-fill me-1" aria-hidden="true"></i>
+            Ver guías
+          </a>
+          <a class="btn btn-outline-secondary" href="/nino/progreso">
+            <i class="bi bi-bar-chart-line-fill me-1" aria-hidden="true"></i>
+            Ver progreso
+          </a>
+          ${isAdminPreview ? `
+            <a class="btn btn-outline-info" href="/admin/children">
+              <i class="bi bi-list-ul me-1" aria-hidden="true"></i>
+              Volver al listado
+            </a>
+          ` : ''}
+        </div>
+      </section>
+    </main>
+  `
+}) %>

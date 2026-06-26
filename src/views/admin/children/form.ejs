@@ -1,0 +1,106 @@
+<%
+  const isCatechistFlow = formAction === '/children/my';
+  const cancelHref = isCatechistFlow ? '/children/my' : '/admin/children';
+  const eyebrowText = isCatechistFlow ? 'Catequista' : 'Niños';
+  const heroDescription = isCatechistFlow
+    ? 'Creá un catecúmeno dentro de tus grupos asignados. Al finalizar se genera un código seguro para el acceso del niño.'
+    : 'Registrá o editá niños con grupo, avatar opcional y código seguro hasheado.';
+%>
+
+<%- include('../../layout', {
+  title,
+  body: `
+    <main class="dashboard-page admin-resource-page child-form-page">
+      <nav class="navbar navbar-expand-lg dashboard-navbar">
+        <div class="dashboard-navbar__inner">
+          <div class="dashboard-user-nav">
+            <span class="dashboard-user-icon" aria-hidden="true">
+              <i class="bi bi-person-fill"></i>
+            </span>
+            <span class="dashboard-user-role">${escapeHtml(user.role)}</span>
+          </div>
+
+          <form action="/logout" method="post">
+            <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+            <button class="btn dashboard-logout-btn" type="submit" aria-label="Cerrar sesión">
+              <i class="bi bi-box-arrow-right me-1"></i>Salir
+            </button>
+          </form>
+        </div>
+      </nav>
+
+      <section class="dashboard-container admin-resource-container child-form-container">
+        <header class="admin-resource-hero text-center">
+          <span class="admin-dashboard-eyebrow">
+            <i class="bi bi-person-plus-fill"></i>
+            ${escapeHtml(eyebrowText)}
+          </span>
+          <h1 class="dashboard-title mb-3">${escapeHtml(formTitle)}</h1>
+          <p class="dashboard-subtitle mb-0">${escapeHtml(heroDescription)}</p>
+        </header>
+
+        <section class="admin-form-card child-form-card" aria-labelledby="child-form-title">
+          <div class="admin-form-card__header child-form-card__header">
+            <span class="admin-form-card__kicker" aria-hidden="true">
+              <i class="bi bi-shield-lock-fill"></i>
+            </span>
+            <div>
+              <h2 id="child-form-title">
+                <i class="bi bi-emoji-smile-fill"></i>
+                Datos del catecúmeno
+              </h2>
+              <p>Completá los datos básicos y elegí un grupo permitido para tu rol.</p>
+            </div>
+          </div>
+
+          <form class="admin-form-grid child-form-grid" action="${escapeHtml(formAction)}" method="post" novalidate>
+            <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+
+            <div class="admin-form-field">
+              <label class="form-label" for="firstName">Nombre</label>
+              <input class="form-control ${errors.firstName ? 'is-invalid' : ''}" id="firstName" name="firstName" value="${escapeHtml(child.firstName)}" required />
+              ${errors.firstName ? `<div class="invalid-feedback">${escapeHtml(errors.firstName)}</div>` : ''}
+            </div>
+
+            <div class="admin-form-field">
+              <label class="form-label" for="lastName">Apellido</label>
+              <input class="form-control ${errors.lastName ? 'is-invalid' : ''}" id="lastName" name="lastName" value="${escapeHtml(child.lastName)}" required />
+              ${errors.lastName ? `<div class="invalid-feedback">${escapeHtml(errors.lastName)}</div>` : ''}
+            </div>
+
+            <div class="admin-form-field admin-form-field--full">
+              <label class="form-label" for="avatarPath">Avatar opcional</label>
+              <input class="form-control ${errors.avatarPath ? 'is-invalid' : ''}" id="avatarPath" name="avatarPath" value="${escapeHtml(child.avatarPath)}" placeholder="/uploads/avatar.png o https://..." />
+              ${errors.avatarPath ? `<div class="invalid-feedback">${escapeHtml(errors.avatarPath)}</div>` : ''}
+              <div class="form-text">Podés dejarlo vacío. Si cargás una URL, usá una ruta válida.</div>
+            </div>
+
+            <div class="admin-form-field admin-form-field--full">
+              <label class="form-label" for="groupId">Grupo</label>
+              <select class="form-select ${errors.groupId ? 'is-invalid' : ''}" id="groupId" name="groupId" required>
+                <option value="">Seleccionar grupo</option>
+                ${groups.map((group) => `
+                  <option value="${group.id}" ${Number(child.groupId) === group.id ? 'selected' : ''}>
+                    ${escapeHtml(group.name)} — ${escapeHtml(group.catechesis_level_name)} — ${escapeHtml(group.parish_name)}
+                  </option>
+                `).join('')}
+              </select>
+              ${errors.groupId ? `<div class="invalid-feedback">${escapeHtml(errors.groupId)}</div>` : ''}
+            </div>
+
+            <div class="admin-form-actions child-form-actions">
+              <button class="btn admin-resource-primary-action" type="submit">
+                <i class="bi bi-check-circle-fill"></i>
+                ${escapeHtml(submitLabel)}
+              </button>
+              <a class="btn btn-outline-secondary" href="${escapeHtml(cancelHref)}">
+                <i class="bi bi-arrow-left-circle me-1"></i>
+                Cancelar
+              </a>
+            </div>
+          </form>
+        </section>
+      </section>
+    </main>
+  `
+}) %>

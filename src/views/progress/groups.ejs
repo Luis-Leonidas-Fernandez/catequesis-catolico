@@ -1,0 +1,200 @@
+<%
+  const totalGroups = progress.groups.length;
+  const totalChildren = progress.groups.reduce((sum, group) => sum + group.children.length, 0);
+  const averageProgress = totalGroups
+    ? Math.round(progress.groups.reduce((sum, group) => sum + Number(group.average || 0), 0) / totalGroups)
+    : 0;
+  const isCoordinator = user.role === 'coordinador_zonal' || user.role === 'coordinador_parroquial';
+  const roleLabel = user.role === 'admin'
+    ? 'Administrador'
+    : isCoordinator
+      ? 'Coordinación'
+      : 'Catequista';
+  const heroDescription = user.role === 'admin'
+    ? 'Vista general de todos los grupos y su avance catequístico.'
+    : isCoordinator
+      ? 'Vista de observación limitada a los grupos, niños y avance de tu parroquia.'
+      : 'Vista limitada a tus grupos asignados y su avance catequístico.';
+%>
+
+<%- include('../layout', {
+  title,
+  body: `
+    <main class="dashboard-page admin-resource-page progress-groups-page">
+      <nav class="navbar navbar-expand-lg dashboard-navbar">
+        <div class="dashboard-navbar__inner">
+          <div class="dashboard-user-nav">
+            <span class="dashboard-user-icon" aria-hidden="true">
+              <i class="bi bi-person-fill"></i>
+            </span>
+            <span class="dashboard-user-role">${escapeHtml(user.role)}</span>
+          </div>
+
+          <form action="/logout" method="post">
+            <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+            <button class="btn dashboard-logout-btn" type="submit" aria-label="Cerrar sesión">
+              <i class="bi bi-box-arrow-right me-1"></i>Salir
+            </button>
+          </form>
+        </div>
+      </nav>
+
+      <section class="dashboard-container admin-resource-container">
+        <header class="admin-resource-hero text-center">
+          <span class="admin-dashboard-eyebrow">
+            <i class="bi bi-people-fill"></i>
+            ${roleLabel}
+          </span>
+          <h1 class="dashboard-title mb-3">Progreso grupal</h1>
+          <p class="dashboard-subtitle mb-0">
+            ${heroDescription}
+          </p>
+        </header>
+
+        <section class="admin-resource-summary progress-groups-summary" aria-label="Resumen de progreso grupal">
+          <article class="admin-metric-card admin-resource-summary__card">
+            <span class="admin-metric-card__icon" aria-hidden="true">
+              <i class="bi bi-collection-fill"></i>
+            </span>
+            <span class="admin-metric-card__label">Grupos visibles</span>
+            <strong class="admin-metric-card__value">${totalGroups}</strong>
+          </article>
+
+          <article class="admin-metric-card admin-resource-summary__card">
+            <span class="admin-metric-card__icon" aria-hidden="true">
+              <i class="bi bi-person-hearts"></i>
+            </span>
+            <span class="admin-metric-card__label">Catecúmenos visibles</span>
+            <strong class="admin-metric-card__value">${totalChildren}</strong>
+          </article>
+
+          <article class="admin-metric-card admin-resource-summary__card">
+            <span class="admin-metric-card__icon" aria-hidden="true">
+              <i class="bi bi-graph-up-arrow"></i>
+            </span>
+            <span class="admin-metric-card__label">Promedio general</span>
+            <strong class="admin-metric-card__value">${averageProgress}%</strong>
+          </article>
+        </section>
+
+        <div class="admin-resource-actions">
+          <a class="btn admin-resource-primary-action" href="/reports/progress.csv">
+            <i class="bi bi-file-earmark-spreadsheet-fill"></i>
+            Descargar CSV
+          </a>
+        </div>
+
+        ${progress.groups.length === 0 ? `
+          <section class="admin-table-card" aria-labelledby="progress-empty-title">
+            <div class="admin-table-card__header">
+              <div>
+                <h2 id="progress-empty-title">Sin grupos disponibles</h2>
+                <p>No hay datos de progreso para mostrar en este momento.</p>
+              </div>
+            </div>
+            <div class="admin-table-empty py-5">
+              <i class="bi bi-people"></i>
+              <strong>No hay grupos disponibles.</strong>
+              <span>Cuando existan grupos con catecúmenos asignados, el progreso aparecerá acá.</span>
+            </div>
+          </section>
+        ` : progress.groups.map((group) => `
+          <section class="admin-table-card progress-group-card" aria-labelledby="progress-group-${group.id}-title">
+            <div class="admin-table-card__header progress-group-card__header">
+              <div>
+                <h2 id="progress-group-${group.id}-title">
+                  <i class="bi bi-collection-fill"></i>
+                  ${escapeHtml(group.name)}
+                </h2>
+                <div class="progress-group-card__meta" aria-label="Datos del grupo">
+                  <span class="badge text-bg-primary">${escapeHtml(group.catechesis_level_name)}</span>
+                  <span class="badge text-bg-secondary">${escapeHtml(group.parish_name)}</span>
+                  <span class="badge text-bg-dark"><i class="bi bi-calendar3"></i> ${group.year}</span>
+                  <span class="badge text-bg-secondary"><i class="bi bi-person-workspace"></i> ${escapeHtml(group.catechist_name || 'Sin asignar')}</span>
+                </div>
+              </div>
+
+              <div class="progress-group-card__score">
+                <span class="badge text-bg-success">
+                  <i class="bi bi-graph-up-arrow"></i>
+                  Promedio ${group.average}%
+                </span>
+                <span class="progress-group-card__stars" aria-label="${group.stars} estrellas">
+                  ${'★'.repeat(group.stars)}${'☆'.repeat(5 - group.stars)}
+                </span>
+              </div>
+            </div>
+
+            <div class="progress-group-card__bar" role="progressbar" aria-label="Promedio del grupo">
+              <div class="progress-bar ${escapeHtml(group.progressClass)}"></div>
+            </div>
+
+            <div class="table-responsive admin-table-card__body">
+              <table class="table align-middle mb-0 admin-resource-table progress-resource-table">
+                <thead>
+                  <tr>
+                    <th>Catecúmeno</th>
+                    <th>Completadas</th>
+                    <th>Correctas</th>
+                    <th>Incorrectas</th>
+                    <th>Porcentaje</th>
+                    <th>Último acceso</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${group.children.length === 0 ? `
+                    <tr>
+                      <td class="text-center py-5" colspan="6">
+                        <div class="admin-table-empty">
+                          <i class="bi bi-person-slash"></i>
+                          <strong>No hay catecúmenos en este grupo.</strong>
+                          <span>Asigná catecúmenos al grupo para poder ver su progreso.</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ` : group.children.map((child) => `
+                    <tr>
+                      <td data-label="Catecúmeno">
+                        <div class="admin-table-user">
+                          <div class="admin-table-avatar" aria-hidden="true">
+                            ${escapeHtml((child.first_name || 'N').charAt(0).toUpperCase())}
+                          </div>
+                          <div>
+                            <span class="admin-table-user__name">${escapeHtml(child.first_name)} ${escapeHtml(child.last_name)}</span>
+                            ${child.is_active ? '' : '<span class="badge text-bg-secondary ms-2">Inactivo</span>'}
+                          </div>
+                        </div>
+                      </td>
+                      <td data-label="Completadas">
+                        <span class="admin-table-inline-icon">
+                          <i class="bi bi-check2-circle"></i>
+                          ${child.completed_activities} / ${child.available_activities}
+                        </span>
+                      </td>
+                      <td data-label="Correctas"><span class="text-success fw-semibold">${child.correct_answers}</span></td>
+                      <td data-label="Incorrectas"><span class="text-danger fw-semibold">${child.incorrect_answers}</span></td>
+                      <td data-label="Porcentaje">
+                        <div class="progress-table-cell">
+                          <div class="progress progress-table" role="progressbar" aria-label="Porcentaje de avance">
+                            <div class="progress-bar ${escapeHtml(child.progressClass)}"></div>
+                          </div>
+                          <span class="progress-table-cell__value">${child.percentage}%</span>
+                        </div>
+                      </td>
+                      <td data-label="Último acceso">
+                        <span class="admin-table-inline-icon">
+                          <i class="bi bi-clock"></i>
+                          ${escapeHtml(child.last_access_at || 'Sin intentos')}
+                        </span>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        `).join('')}
+      </section>
+    </main>
+  `
+}) %>

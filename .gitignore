@@ -1,0 +1,18 @@
+node_modules/
+.env
+
+# SQLite local database
+src/database/*.sqlite
+src/database/*.sqlite-*
+*.db
+*.sqlite
+*.sqlite3
+
+# Local/generated folders
+logs/
+uploads/
+private/
+backups/
+
+# macOS
+.DS_Store

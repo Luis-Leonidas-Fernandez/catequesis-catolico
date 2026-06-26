@@ -1,0 +1,193 @@
+<%
+  const safeUser = user || {};
+  const isEditing = formTitle.toLowerCase().includes('editar');
+  const isOwnGroupFlow = formAction === '/groups/my';
+  const cancelHref = isOwnGroupFlow ? '/groups/my' : '/admin/groups';
+  const selectedParish = parishes.find((parish) => Number(group.parishId) === parish.id);
+  const selectedLevel = catechesisLevels.find((level) => Number(group.catechesisLevelId) === level.id);
+  const selectedCatechist = catechists.find((catechist) => Number(group.catechistId) === catechist.id);
+%>
+
+<%- include('../../layout', {
+  title,
+  body: `
+    <main class="dashboard-page admin-resource-page group-form-page">
+      <nav class="dashboard-navbar" aria-label="Navegación principal">
+        <div class="dashboard-navbar__inner">
+          <div class="dashboard-user-nav" aria-label="Usuario activo">
+            <span class="dashboard-user-icon" aria-hidden="true">
+              <i class="bi bi-person-fill"></i>
+            </span>
+            <span class="dashboard-user-role">${escapeHtml(safeUser.role || 'usuario')}</span>
+          </div>
+          <form action="/logout" method="post">
+            <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+            <button class="btn dashboard-logout-btn" type="submit">
+              <i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>
+              Salir
+            </button>
+          </form>
+        </div>
+      </nav>
+
+      <section class="dashboard-container admin-resource-container group-form-container">
+        <header class="dashboard-hero admin-resource-hero">
+          <span class="admin-dashboard-eyebrow">
+            <i class="bi bi-people-fill" aria-hidden="true"></i>
+            Grupos
+          </span>
+          <h1 class="dashboard-title">${escapeHtml(formTitle)}</h1>
+          <p class="dashboard-subtitle">
+            ${isOwnGroupFlow
+              ? 'Creá un grupo propio para poder registrar catecúmenos dentro de tu parroquia y nivel.'
+              : isEditing
+                ? 'Actualizá la parroquia, el nivel, el catequista y el año del grupo sin perder su historial.'
+                : 'Creá un grupo con parroquia, nivel, catequista asignado y ciclo correspondiente.'}
+          </p>
+        </header>
+
+        <div class="admin-resource-summary group-form-summary" aria-label="Resumen del formulario">
+          <article class="admin-metric-card admin-resource-summary__card">
+            <span class="admin-metric-card__icon" aria-hidden="true">
+              <i class="bi bi-building-heart"></i>
+            </span>
+            <span class="admin-metric-card__label">Parroquia</span>
+            <span class="admin-metric-card__value group-form-summary__value">${escapeHtml(selectedParish ? selectedParish.name : 'Pendiente')}</span>
+          </article>
+          <article class="admin-metric-card admin-resource-summary__card">
+            <span class="admin-metric-card__icon" aria-hidden="true">
+              <i class="bi bi-mortarboard-fill"></i>
+            </span>
+            <span class="admin-metric-card__label">Nivel</span>
+            <span class="admin-metric-card__value group-form-summary__value">${escapeHtml(selectedLevel ? selectedLevel.name : 'Sin definir')}</span>
+          </article>
+        </div>
+
+        <section class="admin-form-card group-form-card" aria-labelledby="group-form-title">
+          <div class="admin-form-card__header group-form-card__header">
+            <span class="admin-form-card__kicker" aria-hidden="true">
+              <i class="bi bi-pencil-square"></i>
+            </span>
+            <div>
+              <h2 id="group-form-title">
+                <i class="bi bi-ui-checks" aria-hidden="true"></i>
+                Datos del grupo
+              </h2>
+              <p>
+                Ordená la información base del grupo. Los campos marcados como obligatorios mantienen las validaciones actuales.
+              </p>
+            </div>
+          </div>
+
+          <form class="admin-form-grid group-form-grid" action="${escapeHtml(formAction)}" method="post" novalidate>
+            <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+
+            <div class="admin-form-field group-form-field group-form-field--name">
+              <label class="form-label" for="name">Nombre del grupo</label>
+              <input
+                class="form-control ${errors.name ? 'is-invalid' : ''}"
+                id="name"
+                name="name"
+                value="${escapeHtml(group.name)}"
+                autocomplete="off"
+                placeholder="Ej: Catequesis familiar 2026"
+                required
+              />
+              ${errors.name ? `<div class="invalid-feedback">${escapeHtml(errors.name)}</div>` : ''}
+            </div>
+
+            <div class="admin-form-field group-form-field">
+              <label class="form-label" for="year">Año</label>
+              <input
+                class="form-control ${errors.year ? 'is-invalid' : ''}"
+                id="year"
+                name="year"
+                type="number"
+                min="2000"
+                max="2100"
+                value="${escapeHtml(group.year)}"
+                required
+              />
+              ${errors.year ? `<div class="invalid-feedback">${escapeHtml(errors.year)}</div>` : ''}
+            </div>
+
+            <div class="admin-form-field group-form-field">
+              <label class="form-label" for="parishId">Parroquia</label>
+              ${isOwnGroupFlow ? `
+                <input type="hidden" id="parishId" name="parishId" value="${escapeHtml(group.parishId)}" />
+                <div class="admin-form-static-value">
+                  <i class="bi bi-building-heart" aria-hidden="true"></i>
+                  ${escapeHtml(selectedParish ? selectedParish.name : 'Parroquia asignada')}
+                </div>
+              ` : `
+                <select class="form-select ${errors.parishId ? 'is-invalid' : ''}" id="parishId" name="parishId" required>
+                  <option value="">Seleccionar parroquia</option>
+                  ${parishes.map((parish) => `
+                    <option value="${parish.id}" ${Number(group.parishId) === parish.id ? 'selected' : ''}>${escapeHtml(parish.name)}</option>
+                  `).join('')}
+                </select>
+              `}
+              ${errors.parishId ? `<div class="invalid-feedback d-block">${escapeHtml(errors.parishId)}</div>` : ''}
+            </div>
+
+            <div class="admin-form-field group-form-field">
+              <label class="form-label" for="catechesisLevelId">Nivel de catequesis</label>
+              ${isOwnGroupFlow ? `
+                <input type="hidden" id="catechesisLevelId" name="catechesisLevelId" value="${escapeHtml(group.catechesisLevelId)}" />
+                <div class="admin-form-static-value">
+                  <i class="bi bi-mortarboard-fill" aria-hidden="true"></i>
+                  ${escapeHtml(selectedLevel ? selectedLevel.name : 'Nivel asignado')}
+                </div>
+              ` : `
+                <select class="form-select ${errors.catechesisLevelId ? 'is-invalid' : ''}" id="catechesisLevelId" name="catechesisLevelId" required>
+                  <option value="">Seleccionar nivel</option>
+                  ${catechesisLevels.map((level) => `
+                    <option value="${level.id}" ${Number(group.catechesisLevelId) === level.id ? 'selected' : ''}>${escapeHtml(level.name)}</option>
+                  `).join('')}
+                </select>
+              `}
+              ${errors.catechesisLevelId ? `<div class="invalid-feedback d-block">${escapeHtml(errors.catechesisLevelId)}</div>` : ''}
+            </div>
+
+            <div class="admin-form-field group-form-field group-form-field--full">
+              <label class="form-label" for="catechistId">Catequista asignado</label>
+              ${isOwnGroupFlow ? `
+                <input type="hidden" id="catechistId" name="catechistId" value="${escapeHtml(group.catechistId)}" />
+                <div class="admin-form-static-value">
+                  <i class="bi bi-person-workspace" aria-hidden="true"></i>
+                  ${escapeHtml(selectedCatechist ? selectedCatechist.name : safeUser.name || 'Tu usuario')}
+                </div>
+              ` : `
+                <select class="form-select ${errors.catechistId ? 'is-invalid' : ''}" id="catechistId" name="catechistId">
+                  <option value="">Sin asignar por ahora</option>
+                  ${catechists.map((catechist) => `
+                    <option value="${catechist.id}" ${Number(group.catechistId) === catechist.id ? 'selected' : ''}>${escapeHtml(catechist.name)} — ${escapeHtml(catechist.role)}</option>
+                  `).join('')}
+                </select>
+              `}
+              ${errors.catechistId ? `<div class="invalid-feedback d-block">${escapeHtml(errors.catechistId)}</div>` : ''}
+              <div class="form-text">
+                ${isOwnGroupFlow
+                  ? 'El grupo quedará asignado a tu usuario automáticamente.'
+                  : selectedCatechist
+                    ? 'Catequista actual: ' + escapeHtml(selectedCatechist.name) + '.'
+                    : 'Podés crear el grupo sin catequista y asignarlo más adelante.'}
+              </div>
+            </div>
+
+            <div class="admin-form-actions group-form-actions">
+              <button class="btn admin-resource-primary-action" type="submit">
+                <i class="bi bi-check2-circle me-1" aria-hidden="true"></i>
+                ${escapeHtml(submitLabel)}
+              </button>
+              <a class="btn btn-outline-secondary" href="${escapeHtml(cancelHref)}">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+                Cancelar
+              </a>
+            </div>
+          </form>
+        </section>
+      </section>
+    </main>
+  `
+}) %>

@@ -1,0 +1,44 @@
+<%
+  const escapeHtml = (value) => String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+
+  const safePosterUrl = loginPosterUrl ? escapeHtml(loginPosterUrl) : '';
+%>
+
+<%- include('layout', {
+  title,
+  body: `
+    <main
+      class="splash-shell"
+      data-splash
+      data-login-url="/login"
+      data-preload-image="${safePosterUrl}"
+      data-min-delay="${escapeHtml(minDelayMs)}"
+      data-max-delay="${escapeHtml(maxDelayMs)}"
+      aria-label="Bienvenida a Catequesis San Pedro"
+    >
+      <section class="splash-card" aria-live="polite">
+        <span class="splash-orb" aria-hidden="true">
+          <i class="bi bi-stars"></i>
+        </span>
+        <p class="splash-kicker">Catequesis San Pedro</p>
+        <h1>Bienvenido</h1>
+        <p class="splash-subtitle">Preparando tu acceso...</p>
+        <div class="splash-progress" aria-hidden="true">
+          <span></span>
+        </div>
+        <a class="splash-skip-link" href="/login">Continuar al login</a>
+      </section>
+      <noscript>
+        <meta http-equiv="refresh" content="1; url=/login">
+        <p class="splash-noscript">
+          JavaScript está desactivado. <a href="/login">Continuar al login</a>.
+        </p>
+      </noscript>
+    </main>
+  `
+}) %>

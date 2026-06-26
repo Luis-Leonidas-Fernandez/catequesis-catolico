@@ -1,0 +1,159 @@
+<%
+  const safeCurrentUser = currentUser || {};
+  const totalActivities = activities.length;
+  const totalQuestions = activities.reduce((sum, activity) => sum + Number(activity.question_count || 0), 0);
+  const totalPoints = activities.reduce((sum, activity) => sum + Number(activity.points || 0), 0);
+%>
+
+<%- include('../layout', {
+  title,
+  body: `
+    <main class="dashboard-page child-activities-page">
+      <nav class="dashboard-navbar child-activities-navbar" aria-label="Navegación principal">
+        <div class="dashboard-navbar__inner ${isAdminPreview ? '' : 'child-activities-navbar__inner'}">
+          ${isAdminPreview ? `
+            <a class="btn btn-outline-secondary child-profile-back-link" href="/admin/children">
+              <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+              Niños
+            </a>
+            <div class="dashboard-user-nav" aria-label="Usuario activo">
+              <span class="dashboard-user-icon" aria-hidden="true">
+                <i class="bi bi-person-fill"></i>
+              </span>
+              <span class="dashboard-user-role">${escapeHtml(safeCurrentUser.role || 'admin')}</span>
+            </div>
+            <form action="/logout" method="post">
+              <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+              <button class="btn dashboard-logout-btn" type="submit">
+                <i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>
+                Salir
+              </button>
+            </form>
+          ` : `
+            <a class="child-activities-navbar__brand" href="/perfil-nino" aria-label="Catequesis San Pedro">
+              <span class="dashboard-user-icon" aria-hidden="true">
+                <i class="bi bi-stars"></i>
+              </span>
+              <span>Catequesis San Pedro</span>
+            </a>
+            <div class="dashboard-navbar__actions child-activities-navbar__actions">
+              <div class="dashboard-user-nav" aria-label="Perfil activo">
+                <span class="dashboard-user-icon" aria-hidden="true">
+                  <i class="bi bi-person-heart"></i>
+                </span>
+                <span class="dashboard-user-role">niño</span>
+              </div>
+              <form action="/salir-nino" method="post">
+                <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+                <button class="btn dashboard-logout-btn" type="submit">
+                  <i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>
+                  Salir
+                </button>
+              </form>
+            </div>
+          `}
+        </div>
+      </nav>
+
+      <section class="dashboard-container child-activities-container">
+        <header class="dashboard-hero child-activities-hero">
+          <span class="admin-dashboard-eyebrow">
+            <i class="bi bi-controller" aria-hidden="true"></i>
+            Hola, ${escapeHtml(profile.first_name)}
+          </span>
+          <h1 class="dashboard-title">Actividades para jugar</h1>
+          <p class="dashboard-subtitle">
+            Elegí una actividad de tu nivel: <strong>${escapeHtml(profile.catechesis_level_name)}</strong>.
+          </p>
+        </header>
+
+        <section class="admin-resource-summary child-activities-summary" aria-label="Resumen de actividades">
+          <article class="admin-metric-card admin-resource-summary__card">
+            <span class="admin-metric-card__icon" aria-hidden="true">
+              <i class="bi bi-joystick"></i>
+            </span>
+            <span class="admin-metric-card__label">Actividades</span>
+            <strong class="admin-metric-card__value">${totalActivities}</strong>
+          </article>
+          <article class="admin-metric-card admin-resource-summary__card">
+            <span class="admin-metric-card__icon" aria-hidden="true">
+              <i class="bi bi-question-circle-fill"></i>
+            </span>
+            <span class="admin-metric-card__label">Preguntas</span>
+            <strong class="admin-metric-card__value">${totalQuestions}</strong>
+          </article>
+          <article class="admin-metric-card admin-resource-summary__card">
+            <span class="admin-metric-card__icon" aria-hidden="true">
+              <i class="bi bi-star-fill"></i>
+            </span>
+            <span class="admin-metric-card__label">Puntos posibles</span>
+            <strong class="admin-metric-card__value">${totalPoints}</strong>
+          </article>
+        </section>
+
+        <div class="child-activities-actions">
+          <a class="btn btn-outline-secondary" href="/perfil-nino">
+            <i class="bi bi-person-circle me-1" aria-hidden="true"></i>
+            Volver al perfil
+          </a>
+        </div>
+
+        ${activities.length === 0 ? `
+          <section class="admin-form-card child-activities-empty" aria-labelledby="child-activities-empty-title">
+            <div class="admin-form-card__header child-activities-empty__header">
+              <span class="admin-form-card__kicker" aria-hidden="true">
+                <i class="bi bi-journal-x"></i>
+              </span>
+              <div>
+                <h2 id="child-activities-empty-title">
+                  <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+                  Sin actividades todavía
+                </h2>
+                <p>Cuando tu catequista publique actividades para tu nivel, van a aparecer acá.</p>
+              </div>
+            </div>
+          </section>
+        ` : `
+          <section class="child-activities-grid" aria-label="Listado de actividades">
+            ${activities.map((activity, index) => `
+              <article class="child-activity-card ${activity.image_path ? 'child-activity-card--image' : ''}">
+                ${
+                  activity.image_path
+                    ? `<img src="${escapeHtml(activity.image_path)}" alt="Imagen de ${escapeHtml(activity.title)}" class="child-activity-card__image" />`
+                    : `<div class="child-activity-card__placeholder" aria-hidden="true"><i class="bi bi-controller"></i></div>`
+                }
+                <div class="child-activity-card__overlay" aria-hidden="true"></div>
+                <div class="child-activity-card__content">
+                  <div class="child-activity-card__badges">
+                    <span class="badge text-bg-primary">
+                      <i class="bi bi-controller" aria-hidden="true"></i>
+                      ${escapeHtml(activity.activity_type)}
+                    </span>
+                    <span class="badge text-bg-warning text-dark">
+                      <i class="bi bi-star-fill" aria-hidden="true"></i>
+                      ${Number(activity.points || 0)} pts
+                    </span>
+                  </div>
+                  <div class="child-activity-card__copy">
+                    <h2>${escapeHtml(activity.title)}</h2>
+                    <p>${escapeHtml(activity.description || 'Actividad para responder y aprender jugando.')}</p>
+                  </div>
+                  <div class="child-activity-card__footer">
+                    <span>
+                      <i class="bi bi-question-circle-fill" aria-hidden="true"></i>
+                      ${Number(activity.question_count || 0)} pregunta${Number(activity.question_count || 0) === 1 ? '' : 's'}
+                    </span>
+                    <a class="btn admin-resource-primary-action" href="/nino/actividades/${activity.id}/jugar">
+                      <i class="bi bi-play-circle-fill me-1" aria-hidden="true"></i>
+                      Jugar
+                    </a>
+                  </div>
+                </div>
+              </article>
+            `).join('')}
+          </section>
+        `}
+      </section>
+    </main>
+  `
+}) %>

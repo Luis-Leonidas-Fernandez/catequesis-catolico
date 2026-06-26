@@ -1,0 +1,83 @@
+<%- include('../layout', {
+  title,
+  body: `
+    <main class="dashboard-page child-access-login-page">
+      <nav class="dashboard-navbar child-access-navbar" aria-label="Navegación principal">
+        <div class="dashboard-navbar__inner child-access-navbar__inner">
+          <a class="child-access-navbar__brand" href="/acceso-nino" aria-label="Catequesis San Pedro">
+            <span class="dashboard-user-icon" aria-hidden="true">
+              <i class="bi bi-stars"></i>
+            </span>
+            <span>Catequesis San Pedro</span>
+          </a>
+          <span class="child-access-navbar__pill">
+            <i class="bi bi-shield-check" aria-hidden="true"></i>
+            Acceso seguro
+          </span>
+        </div>
+      </nav>
+
+      <section class="dashboard-container child-access-login-container">
+        <header class="dashboard-hero child-access-login-hero">
+          <span class="admin-dashboard-eyebrow">
+            <i class="bi bi-heart-fill" aria-hidden="true"></i>
+            Espacio de niños
+          </span>
+          <h1 class="dashboard-title">Entrá a tu perfil</h1>
+          <p class="dashboard-subtitle">
+            Usá el código seguro que te dio tu catequista para ver tus actividades, tu progreso y seguir aprendiendo.
+          </p>
+        </header>
+
+        <section class="admin-form-card child-access-login-card" aria-labelledby="child-access-title">
+          <div class="admin-form-card__header child-access-login-card__header">
+            <span class="admin-form-card__kicker" aria-hidden="true">
+              <i class="bi bi-key-fill"></i>
+            </span>
+            <div>
+              <h2 id="child-access-title">
+                <i class="bi bi-person-heart" aria-hidden="true"></i>
+                Código de acceso
+              </h2>
+              <p>Escribí tu código tal como aparece. Si no lo tenés, pedíselo a tu catequista.</p>
+            </div>
+          </div>
+
+          ${error ? `
+            <div class="admin-resource-feedback child-access-login-feedback">
+              <div class="alert alert-danger" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>
+                ${escapeHtml(error)}
+              </div>
+            </div>
+          ` : ''}
+
+          <form class="admin-form-grid child-access-login-form" action="/acceso-nino" method="post" novalidate>
+            <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+            <div class="admin-form-field admin-form-field--full child-access-login-field">
+              <label class="form-label" for="accessCode">Código seguro</label>
+              <input
+                class="form-control text-uppercase child-access-login-input"
+                id="accessCode"
+                name="accessCode"
+                value="${escapeHtml(accessCode)}"
+                placeholder="PAZ-7K9Q"
+                autocomplete="one-time-code"
+                inputmode="text"
+                required
+              />
+              <div class="form-text">El código es personal. No lo compartas con otros compañeros.</div>
+            </div>
+
+            <div class="admin-form-actions child-access-login-actions">
+              <button class="btn admin-resource-primary-action" type="submit">
+                <i class="bi bi-box-arrow-in-right me-1" aria-hidden="true"></i>
+                Entrar
+              </button>
+            </div>
+          </form>
+        </section>
+      </section>
+    </main>
+  `
+}) %>

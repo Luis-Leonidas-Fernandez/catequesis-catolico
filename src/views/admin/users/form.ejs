@@ -1,0 +1,165 @@
+<%
+  const safeCurrentUser = currentUser || {};
+  const formUser = user || {};
+  const selectedParish = parishes.find((parish) => Number(formUser.parishId) === parish.id);
+  const selectedRole = formUser.role || '';
+%>
+
+<%- include('../../layout', {
+  title,
+  body: `
+    <main class="dashboard-page admin-resource-page user-form-page">
+      <nav class="dashboard-navbar" aria-label="Navegación principal">
+        <div class="dashboard-navbar__inner">
+          <div class="dashboard-user-nav" aria-label="Usuario activo">
+            <span class="dashboard-user-icon" aria-hidden="true">
+              <i class="bi bi-person-fill"></i>
+            </span>
+            <span class="dashboard-user-role">${escapeHtml(safeCurrentUser.role || 'admin')}</span>
+          </div>
+          <form action="/logout" method="post">
+            <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+            <button class="btn dashboard-logout-btn" type="submit">
+              <i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>
+              Salir
+            </button>
+          </form>
+        </div>
+      </nav>
+
+      <section class="dashboard-container admin-resource-container user-form-container">
+        <header class="dashboard-hero admin-resource-hero">
+          <span class="admin-dashboard-eyebrow">
+            <i class="bi bi-shield-lock-fill" aria-hidden="true"></i>
+            Panel admin
+          </span>
+          <h1 class="dashboard-title">${escapeHtml(formTitle)}</h1>
+          <p class="dashboard-subtitle">
+            ${isEdit
+              ? 'Actualizá los datos administrativos del usuario, su rol y su parroquia asociada.'
+              : 'Creá un acceso administrativo seguro con rol, parroquia y contraseña hasheada.'}
+          </p>
+        </header>
+
+        <div class="admin-resource-summary user-form-summary" aria-label="Resumen del usuario">
+          <article class="admin-metric-card admin-resource-summary__card">
+            <span class="admin-metric-card__icon" aria-hidden="true">
+              <i class="bi bi-person-badge"></i>
+            </span>
+            <span class="admin-metric-card__label">Rol seleccionado</span>
+            <span class="admin-metric-card__value user-form-summary__value">${escapeHtml(selectedRole || 'Pendiente')}</span>
+          </article>
+          <article class="admin-metric-card admin-resource-summary__card">
+            <span class="admin-metric-card__icon" aria-hidden="true">
+              <i class="bi bi-building-heart"></i>
+            </span>
+            <span class="admin-metric-card__label">Parroquia</span>
+            <span class="admin-metric-card__value user-form-summary__value">${escapeHtml(selectedParish ? selectedParish.name : 'Sin parroquia')}</span>
+          </article>
+        </div>
+
+        <section class="admin-form-card user-form-card" aria-labelledby="user-form-title">
+          <div class="admin-form-card__header user-form-card__header">
+            <span class="admin-form-card__kicker" aria-hidden="true">
+              <i class="bi bi-person-fill-gear"></i>
+            </span>
+            <div>
+              <h2 id="user-form-title">
+                <i class="bi bi-ui-checks" aria-hidden="true"></i>
+                Datos del usuario
+              </h2>
+              <p>
+                Cargá la identidad, permisos y credenciales. La contraseña nunca se guarda en texto plano.
+              </p>
+            </div>
+          </div>
+
+          <form class="admin-form-grid user-form-grid" action="${escapeHtml(formAction)}" method="post" novalidate>
+            <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+
+            <div class="admin-form-field user-form-field">
+              <label class="form-label" for="name">Nombre</label>
+              <input
+                class="form-control ${errors.name ? 'is-invalid' : ''}"
+                id="name"
+                name="name"
+                value="${escapeHtml(formUser.name || '')}"
+                autocomplete="name"
+                placeholder="Ej: María González"
+                required
+              />
+              ${errors.name ? `<div class="invalid-feedback">${escapeHtml(errors.name)}</div>` : ''}
+            </div>
+
+            <div class="admin-form-field user-form-field">
+              <label class="form-label" for="email">Email</label>
+              <input
+                class="form-control ${errors.email ? 'is-invalid' : ''}"
+                id="email"
+                name="email"
+                type="email"
+                value="${escapeHtml(formUser.email || '')}"
+                autocomplete="email"
+                placeholder="usuario@sanpedro.local"
+                required
+              />
+              ${errors.email ? `<div class="invalid-feedback">${escapeHtml(errors.email)}</div>` : ''}
+            </div>
+
+            <div class="admin-form-field user-form-field">
+              <label class="form-label" for="role">Rol</label>
+              <select class="form-select ${errors.role ? 'is-invalid' : ''}" id="role" name="role" required>
+                <option value="">Seleccionar rol</option>
+                ${roles.map((role) => `
+                  <option value="${escapeHtml(role)}" ${formUser.role === role ? 'selected' : ''}>${escapeHtml(role)}</option>
+                `).join('')}
+              </select>
+              ${errors.role ? `<div class="invalid-feedback">${escapeHtml(errors.role)}</div>` : ''}
+            </div>
+
+            <div class="admin-form-field user-form-field">
+              <label class="form-label" for="parishId">Parroquia</label>
+              <select class="form-select ${errors.parishId ? 'is-invalid' : ''}" id="parishId" name="parishId">
+                <option value="">Sin parroquia</option>
+                ${parishes.map((parish) => `
+                  <option value="${parish.id}" ${Number(formUser.parishId) === parish.id ? 'selected' : ''}>${escapeHtml(parish.name)}</option>
+                `).join('')}
+              </select>
+              ${errors.parishId ? `<div class="invalid-feedback">${escapeHtml(errors.parishId)}</div>` : ''}
+            </div>
+
+            <div class="admin-form-field admin-form-field--full user-form-field user-form-field--password">
+              <label class="form-label" for="password">
+                ${isEdit ? 'Nueva contraseña' : 'Contraseña'}
+              </label>
+              <input
+                class="form-control ${errors.password ? 'is-invalid' : ''}"
+                id="password"
+                name="password"
+                type="password"
+                autocomplete="new-password"
+                placeholder="${isEdit ? 'Dejar vacía para conservarla' : 'Mínimo 8 caracteres'}"
+                ${isEdit ? '' : 'required'}
+              />
+              <div class="form-text">
+                ${isEdit ? 'Dejala vacía para conservar la contraseña actual.' : 'Mínimo 8 caracteres. Se guarda hasheada con bcrypt.'}
+              </div>
+              ${errors.password ? `<div class="invalid-feedback">${escapeHtml(errors.password)}</div>` : ''}
+            </div>
+
+            <div class="admin-form-actions user-form-actions">
+              <button class="btn admin-resource-primary-action" type="submit">
+                <i class="bi bi-check-circle-fill me-1" aria-hidden="true"></i>
+                ${escapeHtml(submitLabel)}
+              </button>
+              <a class="btn btn-outline-secondary" href="/admin/users">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+                Cancelar
+              </a>
+            </div>
+          </form>
+        </section>
+      </section>
+    </main>
+  `
+}) %>

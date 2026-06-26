@@ -1,0 +1,78 @@
+<%- include('../../layout', {
+  title,
+  body: `
+    <main class="dashboard-page admin-resource-page invitation-page">
+      <nav class="dashboard-navbar" aria-label="Navegación principal">
+        <div class="dashboard-navbar__inner">
+          <div class="dashboard-user-nav" aria-label="Usuario activo">
+            <span class="dashboard-user-icon" aria-hidden="true"><i class="bi bi-person-fill"></i></span>
+            <span class="dashboard-user-role">${escapeHtml(user.role)}</span>
+          </div>
+          <form action="/logout" method="post">
+            <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+            <button class="btn dashboard-logout-btn" type="submit">
+              <i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>Salir
+            </button>
+          </form>
+        </div>
+      </nav>
+
+      <section class="dashboard-container admin-resource-container">
+        <header class="dashboard-hero admin-resource-hero">
+          <span class="admin-dashboard-eyebrow"><i class="bi bi-envelope-paper-heart-fill" aria-hidden="true"></i> Invitaciones</span>
+          <h1 class="dashboard-title">Invitaciones de coordinadores</h1>
+          <p class="dashboard-subtitle">Generá accesos por email con token seguro, vencimiento y uso único.</p>
+        </header>
+
+        ${message ? `<div class="alert alert-success admin-resource-alert" role="status">${escapeHtml(message)}</div>` : ''}
+        ${error ? `<div class="alert alert-danger admin-resource-alert" role="alert">${escapeHtml(error)}</div>` : ''}
+
+        <div class="admin-resource-toolbar">
+          <a class="btn admin-resource-primary-action" href="/admin/invitations/new">
+            <i class="bi bi-send-plus-fill me-1" aria-hidden="true"></i>Invitar coordinador
+          </a>
+        </div>
+
+        <section class="admin-table-card" aria-labelledby="invitations-table-title">
+          <div class="admin-table-card__header">
+            <div>
+              <h2 id="invitations-table-title"><i class="bi bi-envelope-check" aria-hidden="true"></i> Historial de invitaciones</h2>
+              <p>Revisá estado, vencimiento y parroquia creada al completar el registro.</p>
+            </div>
+          </div>
+
+          <div class="table-responsive admin-table-wrapper">
+            <table class="table admin-table align-middle">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Rol</th>
+                  <th>Estado</th>
+                  <th>Vence</th>
+                  <th>Parroquia</th>
+                  <th>Creada por</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${invitations.length ? invitations.map((invitation) => `
+                  <tr>
+                    <td data-label="Email">${escapeHtml(invitation.email)}</td>
+                    <td data-label="Rol"><span class="admin-status-pill">${escapeHtml(invitation.role)}</span></td>
+                    <td data-label="Estado"><span class="admin-status-pill admin-status-pill--${escapeHtml(invitation.status)}">${escapeHtml(invitation.status)}</span></td>
+                    <td data-label="Vence">${escapeHtml(invitation.expires_at)}</td>
+                    <td data-label="Parroquia">${escapeHtml(invitation.parish_name || 'Pendiente')}</td>
+                    <td data-label="Creada por">${escapeHtml(invitation.created_by_name || '—')}</td>
+                  </tr>
+                `).join('') : `
+                  <tr>
+                    <td colspan="6" class="admin-empty-cell">Todavía no hay invitaciones.</td>
+                  </tr>
+                `}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+  `
+}) %>

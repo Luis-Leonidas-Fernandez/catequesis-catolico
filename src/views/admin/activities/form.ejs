@@ -1,0 +1,214 @@
+<%
+  const isEditing = formTitle.toLowerCase().includes('editar');
+%>
+
+<%- include('../../layout', {
+  title,
+  body: `
+    <main class="dashboard-page admin-resource-page activity-form-page">
+      <nav class="navbar navbar-expand-lg dashboard-navbar">
+        <div class="dashboard-navbar__inner">
+          <div class="dashboard-user-nav">
+            <span class="dashboard-user-icon" aria-hidden="true">
+              <i class="bi bi-person-fill"></i>
+            </span>
+            <span class="dashboard-user-role">${escapeHtml(user.role)}</span>
+          </div>
+
+          <form action="/logout" method="post">
+            <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+            <button class="btn dashboard-logout-btn" type="submit" aria-label="Cerrar sesión">
+              <i class="bi bi-box-arrow-right me-1"></i>Salir
+            </button>
+          </form>
+        </div>
+      </nav>
+
+      <section class="dashboard-container admin-resource-container activity-form-container">
+        <header class="admin-resource-hero text-center">
+          <span class="admin-dashboard-eyebrow">
+            <i class="bi bi-puzzle-fill"></i>
+            Actividades
+          </span>
+          <h1 class="dashboard-title mb-3">${escapeHtml(formTitle)}</h1>
+          <p class="dashboard-subtitle mb-0">
+            Configurá la actividad, su nivel, puntaje, imagen opcional y preguntas con respuestas correctas.
+          </p>
+        </header>
+
+        ${errors.questions ? `
+          <div class="admin-resource-feedback activity-form-feedback">
+            <div class="alert alert-danger d-flex align-items-center gap-2 border-0 rounded-4 shadow-sm" role="alert">
+              <i class="bi bi-exclamation-circle-fill text-danger fs-5"></i>
+              <span>${escapeHtml(errors.questions)}</span>
+            </div>
+          </div>
+        ` : ''}
+
+        <section class="admin-form-card activity-form-card" aria-labelledby="activity-form-title">
+          <div class="admin-form-card__header activity-form-card__header">
+            <span class="admin-form-card__kicker" aria-hidden="true">
+              <i class="bi ${isEditing ? 'bi-pencil-fill' : 'bi-plus-circle-fill'}"></i>
+            </span>
+            <div>
+              <h2 id="activity-form-title">
+                <i class="bi bi-ui-checks-grid"></i>
+                Datos de la actividad
+              </h2>
+              <p>Cada actividad debe tener al menos una pregunta y cada pregunta al menos una respuesta correcta.</p>
+            </div>
+          </div>
+
+          <form class="admin-form-grid activity-form-grid" action="${escapeHtml(formAction)}?_csrf=${escapeHtml(csrfToken)}" method="post" enctype="multipart/form-data" novalidate>
+            <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+
+            <section class="activity-form-section activity-form-section--full" aria-labelledby="activity-basic-title">
+              <div class="activity-form-section__header">
+                <h3 id="activity-basic-title">
+                  <i class="bi bi-card-text"></i>
+                  Información principal
+                </h3>
+                <p>Título, tipo, nivel y puntaje que va a ver el niño.</p>
+              </div>
+
+              <div class="activity-form-fields">
+                <div class="admin-form-field activity-form-field--title">
+                  <label class="form-label" for="title">Título</label>
+                  <input class="form-control ${errors.title ? 'is-invalid' : ''}" id="title" name="title" value="${escapeHtml(activity.title)}" required />
+                  ${errors.title ? `<div class="invalid-feedback">${escapeHtml(errors.title)}</div>` : ''}
+                </div>
+
+                <div class="admin-form-field">
+                  <label class="form-label" for="points">Puntos</label>
+                  <input class="form-control ${errors.points ? 'is-invalid' : ''}" id="points" name="points" type="number" min="0" max="1000" value="${escapeHtml(activity.points)}" required />
+                  ${errors.points ? `<div class="invalid-feedback">${escapeHtml(errors.points)}</div>` : ''}
+                </div>
+
+                <div class="admin-form-field">
+                  <label class="form-label" for="activityType">Tipo</label>
+                  <select class="form-select ${errors.activityType ? 'is-invalid' : ''}" id="activityType" name="activityType" required>
+                    ${activityTypes.map((type) => `
+                      <option value="${escapeHtml(type)}" ${activity.activityType === type ? 'selected' : ''}>${escapeHtml(type)}</option>
+                    `).join('')}
+                  </select>
+                  ${errors.activityType ? `<div class="invalid-feedback">${escapeHtml(errors.activityType)}</div>` : ''}
+                </div>
+
+                <div class="admin-form-field">
+                  <label class="form-label" for="catechesisLevelId">Nivel de catequesis</label>
+                  <select class="form-select ${errors.catechesisLevelId ? 'is-invalid' : ''}" id="catechesisLevelId" name="catechesisLevelId" required>
+                    <option value="">Seleccionar nivel</option>
+                    ${catechesisLevels.map((level) => `
+                      <option value="${level.id}" ${Number(activity.catechesisLevelId) === level.id ? 'selected' : ''}>${escapeHtml(level.name)}</option>
+                    `).join('')}
+                  </select>
+                  ${errors.catechesisLevelId ? `<div class="invalid-feedback">${escapeHtml(errors.catechesisLevelId)}</div>` : ''}
+                </div>
+
+                <div class="admin-form-field admin-form-field--full">
+                  <label class="form-label" for="description">Descripción</label>
+                  <textarea class="form-control" id="description" name="description" rows="3">${escapeHtml(activity.description)}</textarea>
+                </div>
+              </div>
+            </section>
+
+            <section class="activity-form-section activity-form-section--full" aria-labelledby="activity-media-title">
+              <div class="activity-form-section__header">
+                <h3 id="activity-media-title">
+                  <i class="bi bi-image-fill"></i>
+                  Imagen opcional
+                </h3>
+                <p>Podés sumar una imagen liviana para actividades visuales.</p>
+              </div>
+
+              <div class="activity-form-fields activity-form-fields--single">
+                <div class="admin-form-field admin-form-field--full">
+                  <label class="form-label" for="image">Archivo de imagen</label>
+                  <input type="hidden" name="imagePath" value="${escapeHtml(activity.imagePath)}" />
+                  <input type="hidden" name="mediaAssetId" value="${escapeHtml(activity.mediaAssetId || '')}" />
+                  <input class="form-control ${errors.imageFile || errors.imagePath ? 'is-invalid' : ''}" id="image" name="image" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
+                  ${errors.imageFile ? `<div class="invalid-feedback">${escapeHtml(errors.imageFile)}</div>` : ''}
+                  ${errors.imagePath ? `<div class="invalid-feedback">${escapeHtml(errors.imagePath)}</div>` : ''}
+                  <div class="form-text">Formatos permitidos: JPG, PNG o WebP. Tamaño máximo: 3 MB.</div>
+                  ${
+                    activity.imagePath
+                      ? `<div class="activity-image-current">
+                          <p>Imagen actual</p>
+                          <img src="${escapeHtml(activity.imagePath)}" alt="Imagen actual de la actividad" class="activity-image-preview" />
+                        </div>`
+                      : ''
+                  }
+                </div>
+              </div>
+            </section>
+
+            <section class="activity-form-section activity-form-section--full" aria-labelledby="activity-questions-title">
+              <div class="activity-form-section__header">
+                <h3 id="activity-questions-title">
+                  <i class="bi bi-question-circle-fill"></i>
+                  Preguntas y respuestas
+                </h3>
+                <p>Marcá una respuesta correcta por pregunta. Dejamos la estructura igual para no romper la validación.</p>
+              </div>
+
+              <div class="activity-question-list">
+                ${activity.questions.map((question, questionIndex) => `
+                  <fieldset class="activity-question-card">
+                    <legend>Pregunta ${questionIndex + 1}</legend>
+
+                    <div class="admin-form-field admin-form-field--full">
+                      <label class="form-label" for="questionPrompt${questionIndex}">Texto de la pregunta</label>
+                      <input class="form-control ${errors[`question${questionIndex}`] ? 'is-invalid' : ''}" id="questionPrompt${questionIndex}" name="questionPrompt" value="${escapeHtml(question.prompt)}" />
+                      ${errors[`question${questionIndex}`] ? `<div class="invalid-feedback">${escapeHtml(errors[`question${questionIndex}`])}</div>` : ''}
+                      ${errors[`question${questionIndex}CorrectAnswer`] ? `<div class="activity-question-error">${escapeHtml(errors[`question${questionIndex}CorrectAnswer`])}</div>` : ''}
+                    </div>
+
+                    <div class="activity-answer-grid">
+                      ${question.answers.map((answer, answerIndex) => `
+                        <div class="admin-form-field">
+                          <label class="form-label" for="question${questionIndex}Answer${answerIndex + 1}">
+                            Respuesta ${answerIndex + 1}
+                          </label>
+                          <div class="input-group activity-answer-control">
+                            <span class="input-group-text">
+                              <input
+                                class="form-check-input mt-0"
+                                type="radio"
+                                name="question${questionIndex}CorrectAnswer"
+                                value="${answerIndex + 1}"
+                                aria-label="Respuesta correcta de la pregunta ${questionIndex + 1}"
+                                ${answer.isCorrect ? 'checked' : ''}
+                              />
+                            </span>
+                            <input
+                              class="form-control"
+                              id="question${questionIndex}Answer${answerIndex + 1}"
+                              name="question${questionIndex}Answer${answerIndex + 1}"
+                              value="${escapeHtml(answer.text)}"
+                              placeholder="Texto de respuesta"
+                            />
+                          </div>
+                        </div>
+                      `).join('')}
+                    </div>
+                  </fieldset>
+                `).join('')}
+              </div>
+            </section>
+
+            <div class="admin-form-actions activity-form-actions">
+              <button class="btn admin-resource-primary-action" type="submit">
+                <i class="bi bi-check-circle-fill"></i>
+                ${escapeHtml(submitLabel)}
+              </button>
+              <a class="btn btn-outline-secondary" href="/admin/activities">
+                <i class="bi bi-arrow-left-circle me-1"></i>
+                Cancelar
+              </a>
+            </div>
+          </form>
+        </section>
+      </section>
+    </main>
+  `
+}) %>

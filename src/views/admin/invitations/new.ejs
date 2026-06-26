@@ -1,0 +1,86 @@
+<%
+  const roleLabels = {
+    coordinador_parroquial: 'Coordinador parroquial',
+    coordinador_zonal: 'Coordinador zonal',
+  };
+%>
+
+<%- include('../../layout', {
+  title,
+  body: `
+    <main class="dashboard-page admin-resource-page invitation-form-page">
+      <nav class="dashboard-navbar" aria-label="Navegación principal">
+        <div class="dashboard-navbar__inner">
+          <div class="dashboard-user-nav" aria-label="Usuario activo">
+            <span class="dashboard-user-icon" aria-hidden="true"><i class="bi bi-person-fill"></i></span>
+            <span class="dashboard-user-role">${escapeHtml(user.role)}</span>
+          </div>
+          <form action="/logout" method="post">
+            <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+            <button class="btn dashboard-logout-btn" type="submit">
+              <i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>Salir
+            </button>
+          </form>
+        </div>
+      </nav>
+
+      <section class="dashboard-container admin-resource-container user-form-container">
+        <header class="dashboard-hero admin-resource-hero">
+          <span class="admin-dashboard-eyebrow"><i class="bi bi-send-plus-fill" aria-hidden="true"></i> Token seguro</span>
+          <h1 class="dashboard-title">Invitar coordinador</h1>
+          <p class="dashboard-subtitle">El coordinador recibirá un enlace con vencimiento para crear su usuario y su parroquia.</p>
+        </header>
+
+        <section class="admin-form-card user-form-card" aria-labelledby="invitation-form-title">
+          <div class="admin-form-card__header user-form-card__header">
+            <span class="admin-form-card__kicker" aria-hidden="true"><i class="bi bi-envelope-paper-heart-fill"></i></span>
+            <div>
+              <h2 id="invitation-form-title"><i class="bi bi-ui-checks" aria-hidden="true"></i> Datos de la invitación</h2>
+              <p>El token se guarda hasheado, vence y puede usarse una sola vez.</p>
+            </div>
+          </div>
+
+          <form class="admin-form-grid user-form-grid" action="/admin/invitations" method="post" novalidate>
+            <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+
+            <div class="admin-form-field user-form-field">
+              <label class="form-label" for="email">Email del coordinador</label>
+              <input class="form-control ${errors.email ? 'is-invalid' : ''}" id="email" name="email" type="email" value="${escapeHtml(form.email || '')}" autocomplete="email" required />
+              ${errors.email ? `<div class="invalid-feedback">${escapeHtml(errors.email)}</div>` : ''}
+            </div>
+
+            <div class="admin-form-field user-form-field">
+              <label class="form-label" for="role">Rol</label>
+              <select class="form-select ${errors.role ? 'is-invalid' : ''}" id="role" name="role" required>
+                ${roles.map((role) => `<option value="${escapeHtml(role)}" ${form.role === role ? 'selected' : ''}>${escapeHtml(roleLabels[role] || role)}</option>`).join('')}
+              </select>
+              ${errors.role ? `<div class="invalid-feedback">${escapeHtml(errors.role)}</div>` : ''}
+            </div>
+
+            <div class="admin-form-field user-form-field">
+              <label class="form-label" for="expiresInHours">Vencimiento</label>
+              <select class="form-select ${errors.expiresInHours ? 'is-invalid' : ''}" id="expiresInHours" name="expiresInHours" required>
+                ${[
+                  { value: 24, label: '24 horas' },
+                  { value: 72, label: '72 horas' },
+                  { value: 168, label: '7 días' },
+                  { value: 720, label: '30 días' },
+                ].map((option) => `<option value="${option.value}" ${Number(form.expiresInHours) === option.value ? 'selected' : ''}>${option.label}</option>`).join('')}
+              </select>
+              ${errors.expiresInHours ? `<div class="invalid-feedback">${escapeHtml(errors.expiresInHours)}</div>` : ''}
+            </div>
+
+            <div class="admin-form-actions user-form-actions">
+              <button class="btn admin-resource-primary-action" type="submit">
+                <i class="bi bi-send-fill me-1" aria-hidden="true"></i>Enviar invitación
+              </button>
+              <a class="btn btn-outline-secondary" href="/admin/invitations">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Cancelar
+              </a>
+            </div>
+          </form>
+        </section>
+      </section>
+    </main>
+  `
+}) %>

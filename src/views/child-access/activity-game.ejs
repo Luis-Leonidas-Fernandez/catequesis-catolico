@@ -1,0 +1,181 @@
+<%
+  const safeCurrentUser = currentUser || {};
+  const progressPercent = Math.round(((game.currentQuestionIndex + 1) / game.totalQuestions) * 100);
+  const progressClass =
+    game.currentQuestionIndex + 1 >= game.totalQuestions
+      ? 'progress-width-100'
+      : game.totalQuestions === 2
+        ? 'progress-width-50'
+        : game.currentQuestionIndex === 0
+          ? 'progress-width-one-third'
+          : 'progress-width-two-thirds';
+  const feedbackIcon = game.feedback && game.feedback.type === 'success'
+    ? 'bi-check-circle-fill'
+    : 'bi-exclamation-circle-fill';
+  const feedbackTone = game.feedback && game.feedback.type === 'success'
+    ? 'child-game-feedback--success'
+    : 'child-game-feedback--warning';
+%>
+
+<%- include('../layout', {
+  title,
+  body: `
+    <main class="dashboard-page child-game-page">
+      <nav class="dashboard-navbar child-game-navbar" aria-label="Navegación principal">
+        <div class="dashboard-navbar__inner ${isAdminPreview ? '' : 'child-access-navbar__inner'}">
+          ${isAdminPreview ? `
+            <a class="btn btn-outline-secondary child-profile-back-link" href="/admin/children">
+              <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+              Niños
+            </a>
+            <div class="dashboard-user-nav" aria-label="Usuario activo">
+              <span class="dashboard-user-icon" aria-hidden="true">
+                <i class="bi bi-person-fill"></i>
+              </span>
+              <span class="dashboard-user-role">${escapeHtml(safeCurrentUser.role || 'admin')}</span>
+            </div>
+            <form action="/logout" method="post">
+              <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+              <button class="btn dashboard-logout-btn" type="submit">
+                <i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>
+                Salir
+              </button>
+            </form>
+          ` : `
+            <a class="child-access-navbar__brand" href="/nino/actividades" aria-label="Actividades">
+              <span class="dashboard-user-icon" aria-hidden="true">
+                <i class="bi bi-controller"></i>
+              </span>
+              <span>Actividades</span>
+            </a>
+            <form action="/salir-nino" method="post">
+              <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+              <button class="btn dashboard-logout-btn" type="submit">
+                <i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>
+                Salir
+              </button>
+            </form>
+          `}
+        </div>
+      </nav>
+
+      <section class="dashboard-container child-game-container">
+        <header class="dashboard-hero child-game-hero">
+          <span class="admin-dashboard-eyebrow">
+            <i class="bi bi-joystick" aria-hidden="true"></i>
+            Pregunta ${game.currentQuestionIndex + 1} de ${game.totalQuestions}
+          </span>
+          <h1 class="dashboard-title">${escapeHtml(game.activity.title)}</h1>
+          <p class="dashboard-subtitle">
+            ${escapeHtml(game.activity.description || 'Respondé con calma. Lo importante es aprender.')}
+          </p>
+        </header>
+
+        <section class="admin-resource-summary child-game-summary" aria-label="Resumen de actividad">
+          <article class="admin-metric-card admin-resource-summary__card">
+            <span class="admin-metric-card__icon" aria-hidden="true">
+              <i class="bi bi-tag-fill"></i>
+            </span>
+            <span class="admin-metric-card__label">Tipo</span>
+            <strong class="admin-metric-card__value child-game-summary__value">${escapeHtml(game.activity.activity_type)}</strong>
+          </article>
+          <article class="admin-metric-card admin-resource-summary__card">
+            <span class="admin-metric-card__icon" aria-hidden="true">
+              <i class="bi bi-star-fill"></i>
+            </span>
+            <span class="admin-metric-card__label">Puntos</span>
+            <strong class="admin-metric-card__value">${Number(game.activity.points || 0)}</strong>
+          </article>
+          <article class="admin-metric-card admin-resource-summary__card">
+            <span class="admin-metric-card__icon" aria-hidden="true">
+              <i class="bi bi-bar-chart-line-fill"></i>
+            </span>
+            <span class="admin-metric-card__label">Avance</span>
+            <strong class="admin-metric-card__value">${progressPercent}%</strong>
+          </article>
+        </section>
+
+        <section class="admin-form-card child-game-card" aria-labelledby="child-game-question-title">
+          ${
+            game.activity.image_path
+              ? `<img src="${escapeHtml(game.activity.image_path)}" class="child-game-card__image" alt="Imagen de ${escapeHtml(game.activity.title)}" />`
+              : ''
+          }
+
+          <div class="admin-form-card__header child-game-card__header">
+            <span class="admin-form-card__kicker" aria-hidden="true">
+              <i class="bi bi-question-circle-fill"></i>
+            </span>
+            <div>
+              <h2 id="child-game-question-title">
+                <i class="bi bi-chat-heart-fill" aria-hidden="true"></i>
+                ${escapeHtml(game.currentQuestion.prompt)}
+              </h2>
+              <p>Elegí una respuesta y confirmá para continuar.</p>
+            </div>
+          </div>
+
+          <div class="child-game-progress" role="progressbar" aria-label="Progreso de preguntas" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progressPercent}">
+            <div class="child-game-progress__bar ${progressClass}"></div>
+          </div>
+
+          ${game.feedback ? `
+            <div class="child-game-feedback ${feedbackTone}" role="alert">
+              <i class="bi ${feedbackIcon}" aria-hidden="true"></i>
+              <div>
+                <strong>${escapeHtml(game.feedback.message)}</strong>
+                ${
+                  game.feedback.isCompleted
+                    ? `<span><i class="bi bi-trophy-fill" aria-hidden="true"></i> Actividad terminada: ${game.feedback.correctAnswers} de ${game.totalQuestions} correctas. Puntaje: ${game.feedback.score} pts.</span>`
+                    : ''
+                }
+              </div>
+            </div>
+          ` : ''}
+
+          <form class="child-game-form" action="/nino/actividades/${game.activity.id}/responder" method="post">
+            <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+            <input type="hidden" name="questionId" value="${game.currentQuestion.id}" />
+            <input type="hidden" name="questionIndex" value="${game.currentQuestionIndex}" />
+
+            <fieldset class="child-game-fieldset">
+              <legend class="visually-hidden">${escapeHtml(game.currentQuestion.prompt)}</legend>
+
+              <div class="child-game-answers">
+                ${game.currentQuestion.answers.map((answer, index) => `
+                  <label class="child-game-answer">
+                    <input class="form-check-input" type="radio" name="answerId" value="${answer.id}" />
+                    <span class="child-game-answer__marker">${index + 1}</span>
+                    <span class="child-game-answer__text">${escapeHtml(answer.text)}</span>
+                  </label>
+                `).join('')}
+              </div>
+            </fieldset>
+
+            <div class="child-game-actions">
+              ${
+                game.feedback && game.feedback.isCorrect && game.nextQuestionIndex !== null
+                  ? `<a class="btn admin-resource-primary-action" href="/nino/actividades/${game.activity.id}/jugar?pregunta=${game.nextQuestionIndex}"><i class="bi bi-arrow-right-circle-fill me-1" aria-hidden="true"></i>Siguiente pregunta</a>`
+                  : ''
+              }
+              ${
+                game.feedback && game.feedback.isCompleted
+                  ? '<a class="btn admin-resource-primary-action" href="/nino/actividades"><i class="bi bi-check-circle-fill me-1" aria-hidden="true"></i>Terminar actividad</a>'
+                  : ''
+              }
+              ${
+                !game.feedback || !game.feedback.isCorrect
+                  ? `<button class="btn admin-resource-primary-action" type="submit"><i class="bi bi-send-check-fill me-1" aria-hidden="true"></i>${game.feedback ? 'Intentar nuevamente' : 'Responder'}</button>`
+                  : ''
+              }
+              <a class="btn btn-outline-secondary" href="/nino/actividades">
+                <i class="bi bi-x-circle me-1" aria-hidden="true"></i>
+                Volver
+              </a>
+            </div>
+          </form>
+        </section>
+      </section>
+    </main>
+  `
+}) %>

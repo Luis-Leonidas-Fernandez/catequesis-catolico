@@ -1,0 +1,125 @@
+<%
+  const safeForm = form || {};
+  const shellClasses = ['login-shell', 'register-shell'];
+  const safeLoginVideoUrl = loginVideoUrl ? escapeHtml(loginVideoUrl) : '';
+  const safeLoginPosterUrl = loginPosterUrl ? escapeHtml(loginPosterUrl) : '';
+
+  if (safeLoginPosterUrl) {
+    shellClasses.push('login-shell--has-poster');
+  }
+
+  const loginBackgroundImageMarkup = safeLoginPosterUrl
+    ? `<img class="login-bg-image" src="${safeLoginPosterUrl}" alt="" aria-hidden="true" loading="eager" decoding="async" />`
+    : '';
+
+  const loginBackgroundVideoMarkup = safeLoginVideoUrl
+    ? `<video class="login-bg-video" autoplay muted loop playsinline preload="metadata" ${safeLoginPosterUrl ? `poster="${safeLoginPosterUrl}"` : ''} aria-hidden="true" tabindex="-1"><source src="${safeLoginVideoUrl}" type="video/mp4"></video>`
+    : '';
+
+  const loginBackgroundMediaMarkup = `${loginBackgroundImageMarkup}${loginBackgroundVideoMarkup}`;
+
+  const roleLabels = {
+    catequista_familiar: 'Catequista familiar',
+    catequista_juvenil: 'Catequista juvenil',
+  };
+%>
+
+<%- include('layout', {
+  title,
+  body: `
+    <main class="${shellClasses.join(' ')}">
+      ${loginBackgroundMediaMarkup}
+      <div class="login-overlay" aria-hidden="true"></div>
+
+      <section class="login-content register-content" aria-label="Registro de catequista">
+        <div class="login-card register-card">
+          <div class="login-header register-header">
+            <span class="badge text-bg-primary mb-3">Parroquia San Pedro</span>
+            <h1 class="login-title">Registro de catequista</h1>
+            <p class="login-subtitle">
+              Creá tu acceso para gestionar grupos, niños, guías y progreso según tu rol.
+            </p>
+          </div>
+
+          <form class="login-form register-form" action="/registro-catequista" method="post" novalidate>
+            <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+
+            <div class="login-field">
+              <label class="form-label" for="name">Nombre completo</label>
+              <input
+                class="form-control ${errors.name ? 'is-invalid' : ''}"
+                id="name"
+                name="name"
+                value="${escapeHtml(safeForm.name || '')}"
+                autocomplete="name"
+                required
+              />
+              ${errors.name ? `<div class="invalid-feedback">${escapeHtml(errors.name)}</div>` : ''}
+            </div>
+
+            <div class="login-field">
+              <label class="form-label" for="email">Email</label>
+              <input
+                class="form-control ${errors.email ? 'is-invalid' : ''}"
+                id="email"
+                name="email"
+                type="email"
+                value="${escapeHtml(safeForm.email || '')}"
+                autocomplete="email"
+                required
+              />
+              ${errors.email ? `<div class="invalid-feedback">${escapeHtml(errors.email)}</div>` : ''}
+            </div>
+
+            <div class="login-field">
+              <label class="form-label" for="role">Tipo de catequista</label>
+              <select class="form-select ${errors.role ? 'is-invalid' : ''}" id="role" name="role" required>
+                ${roles.map((role) => `
+                  <option value="${escapeHtml(role)}" ${safeForm.role === role ? 'selected' : ''}>
+                    ${escapeHtml(roleLabels[role] || role)}
+                  </option>
+                `).join('')}
+              </select>
+              ${errors.role ? `<div class="invalid-feedback">${escapeHtml(errors.role)}</div>` : ''}
+            </div>
+
+            <div class="login-field">
+              <label class="form-label" for="parishId">Parroquia</label>
+              <select class="form-select ${errors.parishId ? 'is-invalid' : ''}" id="parishId" name="parishId">
+                <option value="">Sin parroquia asignada</option>
+                ${parishes.map((parish) => `
+                  <option value="${parish.id}" ${Number(safeForm.parishId) === parish.id ? 'selected' : ''}>
+                    ${escapeHtml(parish.name)}
+                  </option>
+                `).join('')}
+              </select>
+              ${errors.parishId ? `<div class="invalid-feedback">${escapeHtml(errors.parishId)}</div>` : ''}
+            </div>
+
+            <div class="login-field">
+              <label class="form-label" for="password">Contraseña</label>
+              <input
+                class="form-control ${errors.password ? 'is-invalid' : ''}"
+                id="password"
+                name="password"
+                type="password"
+                autocomplete="new-password"
+                required
+              />
+              ${errors.password ? `<div class="invalid-feedback">${escapeHtml(errors.password)}</div>` : ''}
+            </div>
+
+            <button class="btn btn-primary login-submit register-submit" type="submit">
+              Crear acceso
+            </button>
+          </form>
+
+          <p class="login-secondary-action">
+            ¿Ya tenés usuario?
+            <a href="/login">Volvé al login</a>
+          </p>
+        </div>
+      </section>
+    </main>
+  `
+}) %>

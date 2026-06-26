@@ -1,0 +1,23 @@
+<%- include('layout', {
+  title,
+  body: `
+    <main class="min-vh-100 d-flex align-items-center bg-light">
+      <section class="container py-5">
+        <div class="row justify-content-center">
+          <div class="col-12 col-md-10 col-lg-7">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body p-4 p-md-5 text-center">
+                <span class="badge text-bg-danger mb-3">403</span>
+                <h1 class="h3 fw-bold mb-3">Acceso denegado</h1>
+                <p class="text-secondary mb-4">
+                  Tu rol actual, <strong>${escapeHtml(user.role)}</strong>, no tiene permiso para entrar a esta sección.
+                </p>
+                <a class="btn btn-primary" href="/dashboard">Volver al dashboard</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  `
+}) %>

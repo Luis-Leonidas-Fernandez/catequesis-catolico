@@ -1,0 +1,23 @@
+<%- include('layout', {
+  title,
+  body: `
+    <main class="min-vh-100 d-flex align-items-center bg-light">
+      <section class="container py-5">
+        <div class="row justify-content-center">
+          <div class="col-12 col-md-10 col-lg-7">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body p-4 p-md-5 text-center">
+                <span class="badge text-bg-warning mb-3">CSRF</span>
+                <h1 class="h3 fw-bold mb-3">Solicitud inválida</h1>
+                <p class="text-secondary mb-4">
+                  El formulario no pudo validarse. Volvé a cargar la página e intentá nuevamente.
+                </p>
+                <a class="btn btn-primary" href="/login">Volver a iniciar sesión</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  `
+}) %>

@@ -1,0 +1,172 @@
+<%
+  const safeCurrentUser = currentUser || {};
+  const totalGuides = guides.length;
+  const totalYears = new Set(guides.map((guide) => guide.year || 'Sin año')).size;
+%>
+
+<%- include('../layout', {
+  title,
+  body: `
+    <main class="dashboard-page child-guides-page">
+      <nav class="dashboard-navbar child-guides-navbar" aria-label="Navegación principal">
+        <div class="dashboard-navbar__inner ${isAdminPreview ? '' : 'child-guides-navbar__inner'}">
+          ${isAdminPreview ? `
+            <a class="btn btn-outline-secondary child-profile-back-link" href="/admin/children">
+              <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+              Niños
+            </a>
+            <div class="dashboard-user-nav" aria-label="Usuario activo">
+              <span class="dashboard-user-icon" aria-hidden="true">
+                <i class="bi bi-person-fill"></i>
+              </span>
+              <span class="dashboard-user-role">${escapeHtml(safeCurrentUser.role || 'admin')}</span>
+            </div>
+            <form action="/logout" method="post">
+              <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+              <button class="btn dashboard-logout-btn" type="submit">
+                <i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>
+                Salir
+              </button>
+            </form>
+          ` : `
+            <a class="child-guides-navbar__brand" href="/perfil-nino" aria-label="Catequesis San Pedro">
+              <span class="dashboard-user-icon" aria-hidden="true">
+                <i class="bi bi-stars"></i>
+              </span>
+              <span>Catequesis San Pedro</span>
+            </a>
+            <div class="dashboard-navbar__actions child-guides-navbar__actions">
+              <div class="dashboard-user-nav" aria-label="Perfil activo">
+                <span class="dashboard-user-icon" aria-hidden="true">
+                  <i class="bi bi-person-heart"></i>
+                </span>
+                <span class="dashboard-user-role">niño</span>
+              </div>
+              <form action="/salir-nino" method="post">
+                <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+                <button class="btn dashboard-logout-btn" type="submit">
+                  <i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>
+                  Salir
+                </button>
+              </form>
+            </div>
+          `}
+        </div>
+      </nav>
+
+      <section class="dashboard-container child-guides-container">
+        <header class="dashboard-hero child-guides-hero">
+          <span class="admin-dashboard-eyebrow">
+            <i class="bi bi-file-earmark-pdf-fill" aria-hidden="true"></i>
+            Guías de ${escapeHtml(profile.parish_name)}
+          </span>
+          <h1 class="dashboard-title">Guías para aprender</h1>
+          <p class="dashboard-subtitle">
+            Acá vas a ver solo las guías de tu parroquia y de tu nivel: <strong>${escapeHtml(profile.catechesis_level_name)}</strong>.
+          </p>
+        </header>
+
+        <section class="admin-resource-summary child-guides-summary" aria-label="Resumen de guías">
+          <article class="admin-metric-card admin-resource-summary__card">
+            <span class="admin-metric-card__icon" aria-hidden="true">
+              <i class="bi bi-journal-bookmark-fill"></i>
+            </span>
+            <span class="admin-metric-card__label">Guías disponibles</span>
+            <strong class="admin-metric-card__value">${totalGuides}</strong>
+          </article>
+          <article class="admin-metric-card admin-resource-summary__card">
+            <span class="admin-metric-card__icon" aria-hidden="true">
+              <i class="bi bi-calendar3"></i>
+            </span>
+            <span class="admin-metric-card__label">Años</span>
+            <strong class="admin-metric-card__value">${totalGuides ? totalYears : 0}</strong>
+          </article>
+          <article class="admin-metric-card admin-resource-summary__card">
+            <span class="admin-metric-card__icon" aria-hidden="true">
+              <i class="bi bi-book-half"></i>
+            </span>
+            <span class="admin-metric-card__label">Nivel</span>
+            <strong class="admin-metric-card__value child-profile-summary__value">${escapeHtml(profile.catechesis_level_name)}</strong>
+          </article>
+        </section>
+
+        <div class="child-activities-actions">
+          <a class="btn btn-outline-secondary" href="/perfil-nino">
+            <i class="bi bi-person-circle me-1" aria-hidden="true"></i>
+            Volver al perfil
+          </a>
+          <a class="btn btn-outline-secondary" href="/nino/actividades">
+            <i class="bi bi-controller me-1" aria-hidden="true"></i>
+            Ver actividades
+          </a>
+        </div>
+
+        ${guides.length === 0 ? `
+          <section class="admin-form-card child-activities-empty" aria-labelledby="child-guides-empty-title">
+            <div class="admin-form-card__header child-activities-empty__header">
+              <span class="admin-form-card__kicker" aria-hidden="true">
+                <i class="bi bi-journal-x"></i>
+              </span>
+              <div>
+                <h2 id="child-guides-empty-title">
+                  <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+                  Sin guías todavía
+                </h2>
+                <p>Cuando tu parroquia suba una guía para tu nivel, va a aparecer acá.</p>
+              </div>
+            </div>
+          </section>
+        ` : `
+          <section class="admin-table-card child-guides-table-card" aria-labelledby="child-guides-list-title">
+            <div class="admin-table-card__header">
+              <div>
+                <h2 id="child-guides-list-title">
+                  <i class="bi bi-file-earmark-pdf-fill" aria-hidden="true"></i>
+                  Guías disponibles
+                </h2>
+                <p>Descargá el PDF correspondiente para estudiar y repasar.</p>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table admin-table align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>Título</th>
+                    <th>Año</th>
+                    <th>Parroquia</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${guides.map((guide) => `
+                    <tr>
+                      <td data-label="Título">
+                        <div class="admin-table-user">
+                          <div class="admin-table-avatar admin-table-avatar--pdf" aria-hidden="true">
+                            <i class="bi bi-filetype-pdf"></i>
+                          </div>
+                          <div>
+                            <strong>${escapeHtml(guide.title)}</strong>
+                            <span>${escapeHtml(guide.description || 'Guía anual de catequesis.')}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td data-label="Año">${escapeHtml(guide.year || '')}</td>
+                      <td data-label="Parroquia">${escapeHtml(guide.parish_name || profile.parish_name)}</td>
+                      <td data-label="Acciones">
+                        <a class="btn btn-sm admin-resource-primary-action" href="/nino/guias/${guide.id}/download">
+                          <i class="bi bi-download me-1" aria-hidden="true"></i>
+                          Descargar
+                        </a>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        `}
+      </section>
+    </main>
+  `
+}) %>

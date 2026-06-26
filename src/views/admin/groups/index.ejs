@@ -1,0 +1,141 @@
+<%
+  const totalGroups = groups.length;
+  const activeGroups = groups.filter((group) => group.is_active).length;
+%>
+
+<%- include('../../layout', {
+  title,
+  body: `
+    <main class="dashboard-page admin-resource-page">
+      <nav class="navbar navbar-expand-lg dashboard-navbar">
+        <div class="dashboard-navbar__inner">
+          <div class="dashboard-user-nav">
+            <span class="dashboard-user-icon" aria-hidden="true">
+              <i class="bi bi-person-fill"></i>
+            </span>
+            <span class="dashboard-user-role">${escapeHtml(user.role)}</span>
+          </div>
+
+          <form action="/logout" method="post">
+            <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+            <button class="btn dashboard-logout-btn" type="submit" aria-label="Cerrar sesión">
+              <i class="bi bi-box-arrow-right me-1"></i>Salir
+            </button>
+          </form>
+        </div>
+      </nav>
+
+      <section class="dashboard-container admin-resource-container">
+        <header class="admin-resource-hero text-center">
+          <span class="admin-dashboard-eyebrow">
+            <i class="bi bi-collection-fill"></i>
+            Grupos
+          </span>
+          <h1 class="dashboard-title mb-3">Grupos de catequesis</h1>
+          <p class="dashboard-subtitle mb-0">
+            Gestión de grupos por parroquia, nivel y catequista asignado.
+          </p>
+        </header>
+
+        <section class="admin-resource-summary" aria-label="Resumen de grupos">
+          <article class="admin-metric-card admin-resource-summary__card">
+            <span class="admin-metric-card__icon" aria-hidden="true">
+              <i class="bi bi-collection-fill"></i>
+            </span>
+            <span class="admin-metric-card__label">Grupos activos</span>
+            <strong class="admin-metric-card__value">${activeGroups}</strong>
+          </article>
+
+          <article class="admin-metric-card admin-resource-summary__card">
+            <span class="admin-metric-card__icon" aria-hidden="true">
+              <i class="bi bi-grid-3x3-gap-fill"></i>
+            </span>
+            <span class="admin-metric-card__label">Total registrados</span>
+            <strong class="admin-metric-card__value">${totalGroups}</strong>
+          </article>
+        </section>
+
+        <div class="admin-resource-actions">
+          <a class="btn admin-resource-primary-action" href="/admin/groups/new">
+            <i class="bi bi-plus-circle-fill"></i>
+            Crear grupo
+          </a>
+        </div>
+
+        <div class="admin-resource-feedback">
+          ${message ? `<div class="alert alert-success d-flex align-items-center gap-2 border-0 rounded-4 shadow-sm" role="alert"><i class="bi bi-check-circle-fill text-success fs-5"></i><span>${escapeHtml(message)}</span></div>` : ''}
+          ${error ? `<div class="alert alert-danger d-flex align-items-center gap-2 border-0 rounded-4 shadow-sm" role="alert"><i class="bi bi-exclamation-circle-fill text-danger fs-5"></i><span>${escapeHtml(error)}</span></div>` : ''}
+        </div>
+
+        <section class="admin-table-card" aria-labelledby="admin-groups-table-title">
+          <div class="admin-table-card__header">
+            <div>
+              <h2 id="admin-groups-table-title">Listado de grupos</h2>
+              <p>Organizá parroquia, nivel, año y catequista responsable.</p>
+            </div>
+          </div>
+
+          <div class="table-responsive admin-table-card__body">
+            <table class="table align-middle mb-0 admin-resource-table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Parroquia</th>
+                  <th>Nivel</th>
+                  <th>Catequista</th>
+                  <th>Año</th>
+                  <th>Estado</th>
+                  <th class="text-end">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${groups.map((group) => `
+                  <tr>
+                    <td data-label="Nombre">
+                      <div class="admin-table-user">
+                        <div class="admin-table-avatar" aria-hidden="true">
+                          <i class="bi bi-collection-fill"></i>
+                        </div>
+                        <span class="admin-table-user__name">${escapeHtml(group.name)}</span>
+                      </div>
+                    </td>
+                    <td data-label="Parroquia">${escapeHtml(group.parish_name)}</td>
+                    <td data-label="Nivel"><code>${escapeHtml(group.catechesis_level_name)}</code></td>
+                    <td data-label="Catequista">
+                      <span class="admin-table-inline-icon">
+                        <i class="bi bi-person-fill"></i>
+                        ${escapeHtml(group.catechist_name || 'Sin asignar')}
+                      </span>
+                    </td>
+                    <td data-label="Año"><span class="badge text-bg-secondary"><i class="bi bi-calendar3"></i> ${group.year}</span></td>
+                    <td data-label="Estado">
+                      <span class="badge ${group.is_active ? 'text-bg-success' : 'text-bg-secondary'}">
+                        <i class="bi bi-circle-fill" style="font-size: 0.45rem;"></i>
+                        ${group.is_active ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </td>
+                    <td data-label="Acciones" class="text-end">
+                      <div class="admin-table-actions">
+                        <a class="btn btn-sm btn-outline-primary" href="/admin/groups/${group.id}/edit">
+                          <i class="bi bi-pencil-fill me-1"></i>Editar
+                        </a>
+                        ${group.is_active ? `
+                          <form action="/admin/groups/${group.id}/deactivate" method="post">
+                            <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+                            <button class="btn btn-sm btn-outline-danger" type="submit">
+                              <i class="bi bi-slash-circle me-1"></i>Desactivar
+                            </button>
+                          </form>
+                        ` : ''}
+                      </div>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+  `
+}) %>

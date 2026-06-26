@@ -1,0 +1,41 @@
+{
+  "name": "catequesis-san-pedro",
+  "version": "1.0.0",
+  "description": "Base del servidor para la web de catequesis católica de la Parroquia San Pedro.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "migrate": "node src/database/migrate.js",
+    "seed": "node src/database/seed.js",
+    "migrate:media": "node scripts/migrate-local-files-to-cloudinary.js",
+    "setup:digitalocean": "bash scripts/setup-digitalocean.sh"
+  },
+  "keywords": [
+    "catequesis",
+    "parroquia",
+    "express",
+    "ejs"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "adm-zip": "^0.5.17",
+    "bcrypt": "^6.0.0",
+    "better-sqlite3": "^11.10.0",
+    "cloudinary": "^2.10.0",
+    "csurf": "^1.11.0",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "express-rate-limit": "^8.5.2",
+    "express-session": "^1.19.0",
+    "helmet": "^8.2.0",
+    "multer": "^2.2.0",
+    "nodemailer": "^9.0.1",
+    "pino": "^10.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}
