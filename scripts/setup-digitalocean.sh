@@ -92,10 +92,11 @@ set_env_value() {
   local key="$1"
   local value="$2"
   local escaped_value
-  escaped_value=$(printf '%s' "$value" | sed -e 's/[\\&]/\\&/g')
+
+  escaped_value=$(printf '%s' "$value" | sed 's/[&|]/\\&/g')
 
   if grep -q "^${key}=" "${ENV_FILE}"; then
-    sed -i "s/^${key}=.*/${key}=${escaped_value}/" "${ENV_FILE}"
+    sed -i "s|^${key}=.*|${key}=${escaped_value}|" "${ENV_FILE}"
   else
     printf '%s=%s\n' "${key}" "${value}" >> "${ENV_FILE}"
   fi
