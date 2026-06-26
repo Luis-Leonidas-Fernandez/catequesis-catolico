@@ -30,45 +30,73 @@
           <p class="dashboard-subtitle mb-0">${escapeHtml(description)}</p>
         </header>
 
-        <section class="admin-form-card role-access-card" aria-labelledby="role-access-title">
-          <div class="admin-form-card__header guides-upload-card__header">
-            <span class="admin-form-card__kicker" aria-hidden="true">
-              <i class="bi bi-person-badge-fill"></i>
-            </span>
-            <h2 id="role-access-title">Datos de acceso</h2>
-            <p>Resumen del usuario autenticado y del espacio habilitado para este rol.</p>
-            <span class="badge text-bg-success"><i class="bi bi-shield-check"></i> Sesión activa</span>
-          </div>
-
-          <div class="admin-form-grid role-access-card__grid" role="group" aria-label="Datos de acceso del usuario">
-            <div class="admin-form-field">
-              <label class="form-label" for="roleUserName">Usuario</label>
-              <input class="form-control" id="roleUserName" value="${escapeHtml(user.name)}" readonly />
+        ${(Array.isArray(typeof links !== 'undefined' ? links : []) && links.length) ? `
+          <section class="dashboard-section role-quick-section" aria-labelledby="role-quick-title">
+            <div class="dashboard-section__header">
+              <h2 id="role-quick-title">Accesos rápidos</h2>
+              <p>Elegí qué necesitás gestionar ahora.</p>
             </div>
 
-            <div class="admin-form-field">
-              <label class="form-label" for="roleUserRole">Rol</label>
-              <input class="form-control" id="roleUserRole" value="${escapeHtml(user.role)}" readonly />
+            <div class="quick-menu dashboard-quick-menu">
+              ${links.map((link) => `
+                <a class="quick-menu__link" href="${escapeHtml(link.href)}">
+                  <span class="quick-menu__media" aria-hidden="true">
+                    <img src="${escapeHtml(dashboardCardImageUrl || '')}" alt="" loading="lazy" />
+                  </span>
+                  <span class="quick-menu__content">
+                    <span class="quick-menu__title">${escapeHtml(link.label)}</span>
+                    <small class="quick-menu__description">${escapeHtml(link.description)}</small>
+                  </span>
+                  <span class="quick-menu__footer" aria-hidden="true">
+                    <span class="quick-menu__action">
+                      <i class="bi bi-arrow-right"></i>
+                    </span>
+                  </span>
+                </a>
+              `).join('')}
+            </div>
+          </section>
+        ` : `
+          <section class="admin-form-card role-access-card" aria-labelledby="role-access-title">
+            <div class="admin-form-card__header guides-upload-card__header">
+              <span class="admin-form-card__kicker" aria-hidden="true">
+                <i class="bi bi-person-badge-fill"></i>
+              </span>
+              <h2 id="role-access-title">Datos de acceso</h2>
+              <p>Resumen del usuario autenticado y del espacio habilitado para este rol.</p>
+              <span class="badge text-bg-success"><i class="bi bi-shield-check"></i> Sesión activa</span>
             </div>
 
-            <div class="admin-form-field admin-form-field--full">
-              <label class="form-label" for="roleAreaName">Área</label>
-              <input class="form-control" id="roleAreaName" value="${escapeHtml(heading)}" readonly />
-            </div>
+            <div class="admin-form-grid role-access-card__grid" role="group" aria-label="Datos de acceso del usuario">
+              <div class="admin-form-field">
+                <label class="form-label" for="roleUserName">Usuario</label>
+                <input class="form-control" id="roleUserName" value="${escapeHtml(user.name)}" readonly />
+              </div>
 
-            <div class="admin-form-field admin-form-field--full">
-              <label class="form-label" for="roleScope">Alcance</label>
-              <textarea class="form-control" id="roleScope" rows="3" readonly>${escapeHtml(description)}</textarea>
-            </div>
+              <div class="admin-form-field">
+                <label class="form-label" for="roleUserRole">Rol</label>
+                <input class="form-control" id="roleUserRole" value="${escapeHtml(user.role)}" readonly />
+              </div>
 
-            <div class="admin-form-actions">
-              <a class="btn admin-resource-primary-action" href="/dashboard">
-                <i class="bi bi-grid-fill"></i>
-                Volver al dashboard
-              </a>
+              <div class="admin-form-field admin-form-field--full">
+                <label class="form-label" for="roleAreaName">Área</label>
+                <input class="form-control" id="roleAreaName" value="${escapeHtml(heading)}" readonly />
+              </div>
+
+              <div class="admin-form-field admin-form-field--full">
+                <label class="form-label" for="roleScope">Alcance</label>
+                <textarea class="form-control" id="roleScope" rows="3" readonly>${escapeHtml(description)}</textarea>
+              </div>
+
+              <div class="admin-form-actions">
+                <a class="btn admin-resource-primary-action" href="/dashboard">
+                  <i class="bi bi-grid-fill"></i>
+                  Volver al dashboard
+                </a>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        `}
       </section>
     </main>
   `
