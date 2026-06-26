@@ -7692,3 +7692,97 @@ select {
     display: none;
   }
 }
+
+/* Activities table mobile polish */
+@media (max-width: 575.98px) {
+  .admin-table-card:has(.activities-resource-table) {
+    width: min(100%, 26rem);
+    margin-inline: auto;
+    overflow: hidden;
+  }
+
+  .admin-table-card .activities-resource-table tbody {
+    gap: 1rem;
+  }
+
+  .admin-table-card .activities-resource-table tbody tr {
+    padding: 1rem;
+    gap: 0.9rem;
+    overflow: hidden;
+  }
+
+  .admin-table-card .activities-resource-table td:not([colspan]) {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.38rem;
+    min-width: 0;
+    padding: 0;
+  }
+
+  .admin-table-card .activities-resource-table td[data-label]::before {
+    display: block;
+    margin: 0;
+    line-height: 1.1;
+  }
+
+  .admin-table-card .activities-resource-table .admin-table-user {
+    display: grid;
+    grid-template-columns: 2.55rem minmax(0, 1fr);
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .admin-table-card .activities-resource-table .admin-table-avatar {
+    width: 2.55rem;
+    height: 2.55rem;
+    flex: 0 0 auto;
+  }
+
+  .admin-table-card .activities-resource-table .admin-table-user__name {
+    display: block;
+    max-width: 100%;
+    min-width: 0;
+    color: rgba(255, 255, 255, 0.96);
+    font-size: 1rem;
+    line-height: 1.2;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
+  .admin-table-card .activities-resource-table code,
+  .admin-table-card .activities-resource-table .badge,
+  .admin-table-card .activities-resource-table .admin-table-inline-icon {
+    width: fit-content;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-table-card .activities-resource-table td[data-label="Acciones"] {
+    padding-top: 0.4rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .admin-table-card .activities-resource-table td[data-label="Acciones"]::before {
+    display: block;
+    margin-bottom: 0.45rem;
+  }
+
+  .admin-table-card .activities-resource-table .admin-table-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+    width: 100%;
+  }
+
+  .admin-table-card .activities-resource-table .admin-table-actions form,
+  .admin-table-card .activities-resource-table .admin-table-actions .btn,
+  .admin-table-card .activities-resource-table .admin-table-actions button,
+  .admin-table-card .activities-resource-table .admin-table-actions a {
+    width: 100%;
+    min-width: 0;
+  }
+}
