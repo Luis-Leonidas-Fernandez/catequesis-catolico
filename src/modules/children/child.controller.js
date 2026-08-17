@@ -164,6 +164,18 @@ function createMyChild(req, res, next) {
 }
 
 function showEditChild(req, res, next) {
+  return showEditChildWithConfig(req, res, next, {
+    formAction: (childId) => `/admin/children/${childId}`,
+  });
+}
+
+function showMyChildEdit(req, res, next) {
+  return showEditChildWithConfig(req, res, next, {
+    formAction: (childId) => `/children/my/${childId}`,
+  });
+}
+
+function showEditChildWithConfig(req, res, next, config) {
   const currentUser = res.locals.currentUser;
   const child = childService.getChildForEdit(Number(req.params.id), currentUser);
 
@@ -174,7 +186,7 @@ function showEditChild(req, res, next) {
   return res.render('admin/children/form', {
     title: 'Editar niño',
     user: currentUser,
-    formAction: `/admin/children/${child.id}`,
+    formAction: config.formAction(child.id),
     formTitle: 'Editar niño',
     submitLabel: 'Guardar cambios',
     csrfToken: res.locals.csrfToken,
@@ -198,6 +210,20 @@ function showEditChild(req, res, next) {
 }
 
 function updateChild(req, res, next) {
+  return updateChildWithConfig(req, res, next, {
+    formAction: (childId) => `/admin/children/${childId}`,
+    redirectUrl: '/admin/children?message=Niño%20actualizado',
+  });
+}
+
+function updateMyChild(req, res, next) {
+  return updateChildWithConfig(req, res, next, {
+    formAction: (childId) => `/children/my/${childId}`,
+    redirectUrl: '/children/my?message=Niño%20actualizado',
+  });
+}
+
+function updateChildWithConfig(req, res, next, config) {
   try {
     const currentUser = res.locals.currentUser;
     const childId = Number(req.params.id);
@@ -209,7 +235,7 @@ function updateChild(req, res, next) {
         422,
         {
           title: 'Editar niño',
-          formAction: `/admin/children/${childId}`,
+          formAction: config.formAction(childId),
           formTitle: 'Editar niño',
           submitLabel: 'Guardar cambios',
           childId,
@@ -231,7 +257,7 @@ function updateChild(req, res, next) {
         422,
         {
           title: 'Editar niño',
-          formAction: `/admin/children/${childId}`,
+          formAction: config.formAction(childId),
           formTitle: 'Editar niño',
           submitLabel: 'Guardar cambios',
           childId,
@@ -242,7 +268,7 @@ function updateChild(req, res, next) {
       );
     }
 
-    return res.redirect('/admin/children?message=Niño%20actualizado');
+    return res.redirect(config.redirectUrl);
   } catch (error) {
     return next(error);
   }
@@ -609,11 +635,13 @@ module.exports = {
   showChildActivityGame,
   showChildren,
   showEditChild,
+  showMyChildEdit,
   showChildProfile,
   showMyChildren,
   showNewChild,
   showNewMyChild,
   updateChild,
+  updateMyChild,
   updateChildFollowUp,
   createChildFollowUpNote,
   listChildFollowUpNotes,

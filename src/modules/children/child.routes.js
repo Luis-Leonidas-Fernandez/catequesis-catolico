@@ -54,6 +54,20 @@ router.post(
   childController.createMyChild,
 );
 
+router.get(
+  '/children/my/:id/edit',
+  requireAuth,
+  requireRole([ROLES.CATEQUISTA]),
+  childController.showMyChildEdit,
+);
+
+router.post(
+  '/children/my/:id',
+  requireAuth,
+  requireRole([ROLES.CATEQUISTA]),
+  childController.updateMyChild,
+);
+
 router.post(
   '/children/:id/regenerate-code',
   requireAuth,
