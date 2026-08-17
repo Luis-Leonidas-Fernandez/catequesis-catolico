@@ -109,12 +109,9 @@ document.addEventListener('DOMContentLoaded', () => {
     routeBackButton.addEventListener('click', () => {
       const fallbackUrl = routeBackButton.dataset.fallbackUrl || '/dashboard';
 
-      if (window.history.length > 1) {
-        window.history.back();
-        return;
-      }
-
-      window.location.href = fallbackUrl;
+      // Use the route's safe destination instead of replaying the browser
+      // history, which may contain POST submissions or intermediate actions.
+      window.location.replace(fallbackUrl);
     });
   }
 

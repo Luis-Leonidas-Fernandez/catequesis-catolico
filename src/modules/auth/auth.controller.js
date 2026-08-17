@@ -56,7 +56,6 @@ const DASHBOARD_BY_ROLE = {
     heading: 'Dashboard de catequesis',
     description: 'Gestioná tus grupos y contenidos dentro de los niveles que tenés asignados.',
     links: [
-      { href: '/dashboard/catequesis', label: 'Catequistas', description: 'Entrar al espacio de catequesis.' },
       { href: '/groups/my', label: 'Mis grupos', description: 'Ver tus grupos asignados.' },
       { href: '/children/my', label: 'Mis niños', description: 'Ver niños asignados a tus grupos.' },
       { href: '/admin/activities', label: 'Actividades', description: 'Crear y gestionar actividades para tus niveles.' },
