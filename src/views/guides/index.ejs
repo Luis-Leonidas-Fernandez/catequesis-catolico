@@ -1,5 +1,5 @@
 <%
-  const canUploadGuide = ['admin', 'coordinador_zonal', 'coordinador_parroquial', 'catequista_familiar', 'catequista_juvenil'].includes(user.role);
+  const canUploadGuide = ['admin', 'coordinador_zonal', 'coordinador_parroquial', 'catequista'].includes(user.role);
   const isAdmin = user.role === 'admin';
   const totalGuides = guides.length;
   const totalLevelsWithGuides = new Set(guides.map((item) => item.catechesis_level_name || 'Sin nivel')).size;

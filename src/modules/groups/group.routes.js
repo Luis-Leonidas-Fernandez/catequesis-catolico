@@ -22,21 +22,21 @@ router.post('/admin/groups/:id/deactivate', groupController.deactivateGroup);
 router.get(
   '/groups/my',
   requireAuth,
-  requireRole([ROLES.CATEQUISTA_FAMILIAR, ROLES.CATEQUISTA_JUVENIL]),
+  requireRole([ROLES.CATEQUISTA]),
   groupController.showMyGroups,
 );
 
 router.get(
   '/groups/my/new',
   requireAuth,
-  requireRole([ROLES.CATEQUISTA_FAMILIAR, ROLES.CATEQUISTA_JUVENIL]),
+  requireRole([ROLES.CATEQUISTA]),
   groupController.showNewMyGroup,
 );
 
 router.post(
   '/groups/my',
   requireAuth,
-  requireRole([ROLES.CATEQUISTA_FAMILIAR, ROLES.CATEQUISTA_JUVENIL]),
+  requireRole([ROLES.CATEQUISTA]),
   groupController.createMyGroup,
 );
 

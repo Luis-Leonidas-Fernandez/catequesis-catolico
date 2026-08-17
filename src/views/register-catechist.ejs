@@ -18,10 +18,15 @@
 
   const loginBackgroundMediaMarkup = `${loginBackgroundImageMarkup}${loginBackgroundVideoMarkup}`;
 
-  const roleLabels = {
-    catequista_familiar: 'Catequista familiar',
-    catequista_juvenil: 'Catequista juvenil',
+  const roleLabels = { catequista: 'Catequista' };
+  const catechesisLevelLabels = {
+    catequesis_familiar: 'Catequesis familiar',
+    catequesis_juvenil: 'Catequesis juvenil',
+    catequesis_bautismal: 'Catequesis bautismal',
   };
+  const selectedLevelIds = Array.isArray(safeForm.catechesisLevelIds)
+    ? safeForm.catechesisLevelIds.map(Number)
+    : [];
 %>
 
 <%- include('layout', {
@@ -37,7 +42,7 @@
             <span class="badge text-bg-primary mb-3">Parroquia San Pedro</span>
             <h1 class="login-title">Registro de catequista</h1>
             <p class="login-subtitle">
-              Creá tu acceso para gestionar grupos, niños, guías y progreso según tu rol.
+              Creá tu acceso para gestionar grupos, niños, guías y progreso en los tres niveles de catequesis.
             </p>
           </div>
 
@@ -72,16 +77,32 @@
             </div>
 
             <div class="login-field">
-              <label class="form-label" for="role">Tipo de catequista</label>
-              <select class="form-select ${errors.role ? 'is-invalid' : ''}" id="role" name="role" required>
-                ${roles.map((role) => `
-                  <option value="${escapeHtml(role)}" ${safeForm.role === role ? 'selected' : ''}>
-                    ${escapeHtml(roleLabels[role] || role)}
-                  </option>
-                `).join('')}
-              </select>
+              <input type="hidden" id="role" name="role" value="${escapeHtml(roles[0] || 'catequista')}" />
+              <label class="form-label" for="role">Rol</label>
+              <div class="form-control-plaintext">${escapeHtml(roleLabels[roles[0]] || 'Catequista')}</div>
+              <div class="form-text">Elegí los niveles de catequesis en los que vas a servir.</div>
               ${errors.role ? `<div class="invalid-feedback">${escapeHtml(errors.role)}</div>` : ''}
             </div>
+
+            <fieldset class="login-field ${errors.catechesisLevelIds ? 'is-invalid' : ''}" aria-describedby="catechesisLevelIds-help catechesisLevelIds-error">
+              <legend class="form-label mb-1">Niveles de catequesis</legend>
+              <div id="catechesisLevelIds-help" class="form-text mb-2">Seleccioná al menos uno.</div>
+              ${catechesisLevels.map((level) => `
+                <div class="form-check">
+                  <input
+                    class="form-check-input ${errors.catechesisLevelIds ? 'is-invalid' : ''}"
+                    id="catechesisLevel-${level.id}"
+                    name="catechesisLevelIds"
+                    type="checkbox"
+                    value="${level.id}"
+                    ${selectedLevelIds.includes(level.id) ? 'checked' : ''}
+                  />
+                  <label class="form-check-label" for="catechesisLevel-${level.id}">${escapeHtml(catechesisLevelLabels[level.name] || level.name)}</label>
+                  ${level.description ? `<div class="form-text">${escapeHtml(level.description)}</div>` : ''}
+                </div>
+              `).join('')}
+              ${errors.catechesisLevelIds ? `<div id="catechesisLevelIds-error" class="invalid-feedback d-block">${escapeHtml(errors.catechesisLevelIds)}</div>` : ''}
+            </fieldset>
 
             <div class="login-field">
               <label class="form-label" for="parishId">Parroquia</label>

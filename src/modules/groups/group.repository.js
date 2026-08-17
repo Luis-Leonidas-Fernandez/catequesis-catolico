@@ -145,7 +145,7 @@ function listActiveCatechists(parishId = null) {
         FROM users
         WHERE is_active = 1
           AND deleted_at IS NULL
-          AND role IN ('catequista_familiar', 'catequista_juvenil')
+          AND role = 'catequista'
           ${parishFilter}
         ORDER BY name ASC
       `,
@@ -222,12 +222,22 @@ function createAuditLog(entry) {
     );
 }
 
+function catechistHasLevel(catechistId, catechesisLevelId) {
+  return Boolean(db.prepare(`
+    SELECT 1
+    FROM catechist_levels
+    WHERE catechist_id = ? AND catechesis_level_id = ?
+    LIMIT 1
+  `).get(catechistId, catechesisLevelId));
+}
+
 function runInTransaction(callback) {
   return db.transaction(callback)();
 }
 
 module.exports = {
   createAuditLog,
+  catechistHasLevel,
   createGroup,
   deactivateGroup,
   findGroupById,

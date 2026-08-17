@@ -10,6 +10,7 @@ function buildFormViewModel(overrides = {}) {
       email: '',
       role: '',
       parishId: '',
+      catechesisLevelIds: [],
     },
     ...userService.getUserFormOptions(),
     ...overrides,
@@ -63,6 +64,7 @@ async function createUser(req, res, next) {
             email: validation.input.email,
             role: validation.input.role,
             parishId: validation.input.parishId || '',
+            catechesisLevelIds: validation.input.catechesisLevelIds,
           },
         }),
       });
@@ -87,6 +89,7 @@ async function createUser(req, res, next) {
             email: validation.input.email,
             role: validation.input.role,
             parishId: validation.input.parishId || '',
+            catechesisLevelIds: validation.input.catechesisLevelIds,
           },
         }),
       });
@@ -121,6 +124,7 @@ function showEditUser(req, res, next) {
         email: user.email,
         role: user.role,
         parishId: user.parish_id || '',
+        catechesisLevelIds: user.catechesisLevelIds,
       },
     }),
   });
@@ -149,6 +153,7 @@ async function updateUser(req, res, next) {
             email: validation.input.email,
             role: validation.input.role,
             parishId: validation.input.parishId || '',
+            catechesisLevelIds: validation.input.catechesisLevelIds,
           },
         }),
       });
@@ -182,6 +187,7 @@ async function updateUser(req, res, next) {
             email: validation.input.email,
             role: validation.input.role,
             parishId: validation.input.parishId || '',
+            catechesisLevelIds: validation.input.catechesisLevelIds,
           },
         }),
       });
@@ -207,7 +213,22 @@ function deactivateUser(req, res, next) {
   return res.redirect('/admin/users?message=Usuario%20desactivado');
 }
 
+function activateUser(req, res, next) {
+  const result = userService.activateUser(Number(req.params.id), res.locals.currentUser.id);
+
+  if (result.notFound) {
+    return next();
+  }
+
+  if (!result.ok) {
+    return res.redirect(`/admin/users?error=${encodeURIComponent(result.errors.user)}`);
+  }
+
+  return res.redirect('/admin/users?message=Usuario%20reactivado');
+}
+
 module.exports = {
+  activateUser,
   createUser,
   deactivateUser,
   showEditUser,

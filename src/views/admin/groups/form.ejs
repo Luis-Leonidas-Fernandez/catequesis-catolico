@@ -133,11 +133,12 @@
             <div class="admin-form-field group-form-field">
               <label class="form-label" for="catechesisLevelId">Nivel de catequesis</label>
               ${isOwnGroupFlow ? `
-                <input type="hidden" id="catechesisLevelId" name="catechesisLevelId" value="${escapeHtml(group.catechesisLevelId)}" />
-                <div class="admin-form-static-value">
-                  <i class="bi bi-mortarboard-fill" aria-hidden="true"></i>
-                  ${escapeHtml(selectedLevel ? selectedLevel.name : 'Nivel asignado')}
-                </div>
+                <select class="form-select ${errors.catechesisLevelId ? 'is-invalid' : ''}" id="catechesisLevelId" name="catechesisLevelId" required>
+                  <option value="">Seleccionar nivel</option>
+                  ${catechesisLevels.map((level) => `
+                    <option value="${level.id}" ${Number(group.catechesisLevelId) === level.id ? 'selected' : ''}>${escapeHtml(level.name)}</option>
+                  `).join('')}
+                </select>
               ` : `
                 <select class="form-select ${errors.catechesisLevelId ? 'is-invalid' : ''}" id="catechesisLevelId" name="catechesisLevelId" required>
                   <option value="">Seleccionar nivel</option>
@@ -168,7 +169,7 @@
               ${errors.catechistId ? `<div class="invalid-feedback d-block">${escapeHtml(errors.catechistId)}</div>` : ''}
               <div class="form-text">
                 ${isOwnGroupFlow
-                  ? 'El grupo quedará asignado a tu usuario automáticamente.'
+                  ? 'El grupo quedará asignado a tu usuario automáticamente. Elegí uno de tus niveles habilitados.'
                   : selectedCatechist
                     ? 'Catequista actual: ' + escapeHtml(selectedCatechist.name) + '.'
                     : 'Podés crear el grupo sin catequista y asignarlo más adelante.'}

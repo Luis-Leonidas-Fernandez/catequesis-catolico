@@ -18,6 +18,12 @@ function buildFormViewModel(currentUser, overrides = {}) {
     child: {
       firstName: '',
       lastName: '',
+      guardianName: '',
+      guardianRelationship: 'tutor',
+      guardianPhone: '',
+      guardianEmail: '',
+      godfatherName: '',
+      godmotherName: '',
       avatarPath: '',
       groupId: '',
     },
@@ -77,6 +83,12 @@ function renderFormWithErrors(res, status, config, currentUser, validation, resu
         id: config.childId,
         firstName: validation.input.firstName,
         lastName: validation.input.lastName,
+        guardianName: validation.input.guardianName,
+        guardianRelationship: validation.input.guardianRelationship || 'tutor',
+        guardianPhone: validation.input.guardianPhone || '',
+        guardianEmail: validation.input.guardianEmail || '',
+        godfatherName: validation.input.godfatherName || '',
+        godmotherName: validation.input.godmotherName || '',
         avatarPath: validation.input.avatarPath || '',
         groupId: validation.input.groupId || '',
       },
@@ -172,6 +184,12 @@ function showEditChild(req, res, next) {
         id: child.id,
         firstName: child.first_name,
         lastName: child.last_name,
+        guardianName: child.guardian_name || '',
+        guardianRelationship: child.guardian_relationship || 'tutor',
+        guardianPhone: child.guardian_phone || '',
+        guardianEmail: child.guardian_email || '',
+        godfatherName: child.godfather_name || '',
+        godmotherName: child.godmother_name || '',
         avatarPath: child.avatar_path || '',
         groupId: child.group_id,
       },
@@ -228,6 +246,39 @@ function updateChild(req, res, next) {
   } catch (error) {
     return next(error);
   }
+}
+
+function updateChildFollowUp(req, res, next) {
+  const currentUser = res.locals.currentUser;
+  const result = childService.updateChildFollowUp(Number(req.params.id), req.body, currentUser);
+
+  if (result.notFound) {
+    return next();
+  }
+
+  if (!result.ok) {
+    const fallback = currentUser.role === 'admin' ? '/admin/children' : '/children/my';
+    return res.redirect(`${fallback}?error=${encodeURIComponent(result.error)}`);
+  }
+
+  const redirectPath = currentUser.role === 'admin' ? '/admin/children' : '/children/my';
+  return res.redirect(`${redirectPath}?message=${encodeURIComponent(req.body.active === '1' ? 'Seguimiento activado' : 'Seguimiento actualizado')}`);
+}
+
+function createChildFollowUpNote(req, res, next) {
+  const currentUser = res.locals.currentUser;
+  const result = childService.createChildFollowUpNote(Number(req.params.id), req.body, currentUser);
+
+  if (result.notFound) return next();
+  const fallback = currentUser.role === 'admin' ? '/admin/children' : '/children/my';
+  if (!result.ok) return res.redirect(`${fallback}?error=${encodeURIComponent(result.error)}`);
+  return res.redirect(`${fallback}?message=${encodeURIComponent('Nota guardada')}`);
+}
+
+function listChildFollowUpNotes(req, res, next) {
+  const result = childService.listChildFollowUpNotes(Number(req.params.id), res.locals.currentUser);
+  if (result.notFound) return next();
+  return res.json({ notes: result.notes });
 }
 
 function deactivateChild(req, res, next) {
@@ -563,4 +614,7 @@ module.exports = {
   showNewChild,
   showNewMyChild,
   updateChild,
+  updateChildFollowUp,
+  createChildFollowUpNote,
+  listChildFollowUpNotes,
 };

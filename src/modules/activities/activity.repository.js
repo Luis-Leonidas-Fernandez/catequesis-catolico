@@ -47,6 +47,34 @@ function listActivitiesByLevel(catechesisLevelId) {
     .all(catechesisLevelId);
 }
 
+function listActivitiesByLevels(catechesisLevelIds) {
+  if (catechesisLevelIds.length === 0) {
+    return [];
+  }
+
+  const placeholders = catechesisLevelIds.map(() => '?').join(', ');
+
+  return db.prepare(`
+    SELECT
+      activities.id,
+      activities.catechesis_level_id,
+      activities.title,
+      activities.description,
+      activities.activity_type,
+      activities.points,
+      activities.image_path,
+      activities.media_asset_id,
+      activities.is_active,
+      activities.created_at,
+      catechesis_levels.name AS catechesis_level_name
+    FROM activities
+    LEFT JOIN catechesis_levels ON catechesis_levels.id = activities.catechesis_level_id
+    WHERE activities.deleted_at IS NULL
+      AND activities.catechesis_level_id IN (${placeholders})
+    ORDER BY activities.is_active DESC, activities.created_at DESC, activities.id DESC
+  `).all(...catechesisLevelIds);
+}
+
 function listActiveCatechesisLevels() {
   return db
     .prepare(
@@ -286,6 +314,7 @@ module.exports = {
   findLevelByName,
   listActivities,
   listActivitiesByLevel,
+  listActivitiesByLevels,
   listActiveCatechesisLevels,
   listQuestionsWithAnswers,
   runInTransaction,

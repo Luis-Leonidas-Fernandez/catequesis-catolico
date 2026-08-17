@@ -69,6 +69,31 @@
             </div>
 
             <div class="admin-form-field admin-form-field--full">
+              <label class="form-label" for="guardianName">Padre, madre o tutor</label>
+              <input class="form-control ${errors.guardianName ? 'is-invalid' : ''}" id="guardianName" name="guardianName" value="${escapeHtml(child.guardianName)}" autocomplete="name" required />
+              ${errors.guardianName ? `<div class="invalid-feedback">${escapeHtml(errors.guardianName)}</div>` : ''}
+            </div>
+
+            <div class="admin-form-field admin-form-field--full">
+              <label class="form-label" for="guardianRelationship">Relación del adulto responsable</label>
+              <input class="form-control ${errors.guardianRelationship ? 'is-invalid' : ''}" id="guardianRelationship" name="guardianRelationship" value="${escapeHtml(child.guardianRelationship || 'tutor')}" placeholder="Padre, madre, tutor legal..." maxlength="40" required />
+              ${errors.guardianRelationship ? `<div class="invalid-feedback">${escapeHtml(errors.guardianRelationship)}</div>` : ''}
+              <div class="form-text">Podés cambiar esta denominación cuando quieras.</div>
+            </div>
+
+            <div class="admin-form-field">
+              <label class="form-label" for="guardianPhone">Teléfono del tutor <span class="text-muted">(opcional)</span></label>
+              <input class="form-control ${errors.guardianPhone ? 'is-invalid' : ''}" id="guardianPhone" name="guardianPhone" value="${escapeHtml(child.guardianPhone)}" type="tel" autocomplete="tel" />
+              ${errors.guardianPhone ? `<div class="invalid-feedback">${escapeHtml(errors.guardianPhone)}</div>` : ''}
+            </div>
+
+            <div class="admin-form-field">
+              <label class="form-label" for="guardianEmail">Email del tutor <span class="text-muted">(opcional)</span></label>
+              <input class="form-control ${errors.guardianEmail ? 'is-invalid' : ''}" id="guardianEmail" name="guardianEmail" value="${escapeHtml(child.guardianEmail)}" type="email" autocomplete="email" />
+              ${errors.guardianEmail ? `<div class="invalid-feedback">${escapeHtml(errors.guardianEmail)}</div>` : ''}
+            </div>
+
+            <div class="admin-form-field admin-form-field--full">
               <label class="form-label" for="avatarPath">Avatar opcional</label>
               <input class="form-control ${errors.avatarPath ? 'is-invalid' : ''}" id="avatarPath" name="avatarPath" value="${escapeHtml(child.avatarPath)}" placeholder="/uploads/avatar.png o https://..." />
               ${errors.avatarPath ? `<div class="invalid-feedback">${escapeHtml(errors.avatarPath)}</div>` : ''}
@@ -77,15 +102,34 @@
 
             <div class="admin-form-field admin-form-field--full">
               <label class="form-label" for="groupId">Grupo</label>
-              <select class="form-select ${errors.groupId ? 'is-invalid' : ''}" id="groupId" name="groupId" required>
+              <select class="form-select ${errors.groupId ? 'is-invalid' : ''}" id="groupId" name="groupId" data-child-group-select required>
                 <option value="">Seleccionar grupo</option>
                 ${groups.map((group) => `
-                  <option value="${group.id}" ${Number(child.groupId) === group.id ? 'selected' : ''}>
+                  <option value="${group.id}" data-catechesis-level="${escapeHtml(group.catechesis_level_name)}" ${Number(child.groupId) === group.id ? 'selected' : ''}>
                     ${escapeHtml(group.name)} — ${escapeHtml(group.catechesis_level_name)} — ${escapeHtml(group.parish_name)}
                   </option>
                 `).join('')}
               </select>
               ${errors.groupId ? `<div class="invalid-feedback">${escapeHtml(errors.groupId)}</div>` : ''}
+            </div>
+
+            <div class="admin-form-field admin-form-field--full child-baptismal-fields" data-baptismal-guardians hidden>
+              <div class="child-baptismal-fields__header">
+                <h3 class="h6 mb-1">Padrinos</h3>
+                <p class="form-text mb-0">Se solicitan únicamente para grupos de catequesis bautismal.</p>
+              </div>
+              <div class="child-baptismal-fields__grid">
+                <div>
+                  <label class="form-label" for="godfatherName">Padrino</label>
+                  <input class="form-control ${errors.godfatherName ? 'is-invalid' : ''}" id="godfatherName" name="godfatherName" value="${escapeHtml(child.godfatherName || '')}" autocomplete="name" data-baptismal-guardian-input />
+                  ${errors.godfatherName ? `<div class="invalid-feedback">${escapeHtml(errors.godfatherName)}</div>` : ''}
+                </div>
+                <div>
+                  <label class="form-label" for="godmotherName">Madrina</label>
+                  <input class="form-control ${errors.godmotherName ? 'is-invalid' : ''}" id="godmotherName" name="godmotherName" value="${escapeHtml(child.godmotherName || '')}" autocomplete="name" data-baptismal-guardian-input />
+                  ${errors.godmotherName ? `<div class="invalid-feedback">${escapeHtml(errors.godmotherName)}</div>` : ''}
+                </div>
+              </div>
             </div>
 
             <div class="admin-form-actions child-form-actions">

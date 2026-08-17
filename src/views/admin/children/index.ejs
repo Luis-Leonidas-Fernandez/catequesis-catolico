@@ -84,12 +84,13 @@
                   <th>Nivel</th>
                   <th>Parroquia</th>
                   <th>Estado</th>
+                  <th>Seguimiento</th>
                   <th class="text-end">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 ${children.map((child) => `
-                  <tr>
+                  <tr class="${child.follow_up_active ? 'admin-row--follow-up' : ''}">
                     <td data-label="Nombre">
                       <div class="admin-table-user">
                         <div class="admin-table-avatar" aria-hidden="true">
@@ -111,6 +112,22 @@
                         <i class="bi bi-circle-fill admin-status-dot"></i>
                         ${child.is_active ? 'Activo' : 'Inactivo'}
                       </span>
+                    </td>
+                    <td data-label="Seguimiento">
+                      <div class="admin-follow-up-form">
+                        <span class="small">Notas: ${child.follow_up_note_count || 0}</span>
+                        <button class="btn btn-sm btn-outline-info" type="button" data-note-modal data-child-id="${child.id}" data-child-name="${escapeHtml(`${child.first_name} ${child.last_name}`)}" data-action-prefix="/admin/children/">
+                          <i class="bi bi-journal-plus me-1"></i>Nueva nota
+                        </button>
+                        ${child.follow_up_note_count ? `<button class="btn btn-sm btn-outline-light" type="button" data-notes-view data-child-id="${child.id}" data-child-name="${escapeHtml(`${child.first_name} ${child.last_name}`)}" data-action-prefix="/admin/children/"><i class="bi bi-journals me-1"></i>Ver notas</button>` : ''}
+                        <form action="/admin/children/${child.id}/follow-up" method="post">
+                          <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+                          <input type="hidden" name="active" value="${child.follow_up_active ? '0' : '1'}" />
+                          <button class="btn btn-sm ${child.follow_up_active ? 'btn-outline-danger' : 'btn-outline-warning'}" type="submit">
+                            ${child.follow_up_active ? 'Dejar de seguir' : 'Dar seguimiento'}
+                          </button>
+                        </form>
+                      </div>
                     </td>
                     <td data-label="Acciones" class="text-end">
                       <div class="admin-table-actions">
@@ -142,6 +159,26 @@
             </table>
           </div>
         </section>
+        <div class="child-note-modal" data-note-modal-container hidden>
+          <div class="child-note-modal__backdrop" data-note-modal-close></div>
+          <section class="child-note-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="child-note-modal-title">
+            <button class="child-note-modal__close" type="button" data-note-modal-close aria-label="Cerrar">&times;</button>
+            <span class="admin-dashboard-eyebrow"><i class="bi bi-journal-text"></i> Seguimiento</span>
+            <h2 id="child-note-modal-title">Crear nota</h2>
+            <p data-note-modal-child></p>
+            <div class="child-note-history" data-note-history hidden></div>
+            <form data-note-modal-form method="post">
+              <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+              <input type="hidden" name="active" data-note-modal-active value="0" />
+              <label class="form-label" for="child-note-modal-input">Nota</label>
+              <textarea class="form-control" id="child-note-modal-input" name="note" rows="6" maxlength="1000" placeholder="Escribí una nota sobre el catecúmeno o su familia..." required></textarea>
+              <div class="child-note-modal__actions">
+                <button class="btn btn-outline-secondary" type="button" data-note-modal-close>Cancelar</button>
+                <button class="btn admin-resource-primary-action" type="submit"><i class="bi bi-check-circle me-1"></i>Guardar nota</button>
+              </div>
+            </form>
+          </section>
+        </div>
       </section>
     </main>
   `

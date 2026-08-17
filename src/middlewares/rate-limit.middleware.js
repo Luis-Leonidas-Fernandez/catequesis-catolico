@@ -8,6 +8,15 @@ const loginLimiter = rateLimit({
   message: 'Demasiados intentos de login. Probá nuevamente en unos minutos.',
 });
 
+const passwordResetRequestLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  skip: (req) => req.method !== 'POST',
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: 'Demasiadas solicitudes de recuperación. Esperá unos minutos y probá nuevamente.',
+});
+
 const accessLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 60,
@@ -36,6 +45,7 @@ const uploadLimiter = rateLimit({
 module.exports = {
   childAccessLimiter,
   loginLimiter,
+  passwordResetRequestLimiter,
   accessLimiter,
   uploadLimiter,
 };

@@ -23,13 +23,9 @@ function buildFormViewModel(currentUser, overrides = {}) {
 }
 
 function buildOwnGroupBody(body, currentUser) {
-  const options = groupService.getGroupFormOptions(currentUser);
-  const allowedLevel = options.catechesisLevels[0];
-
   return {
     ...body,
     parishId: currentUser.parishId,
-    catechesisLevelId: allowedLevel ? allowedLevel.id : body.catechesisLevelId,
     catechistId: currentUser.id,
   };
 }

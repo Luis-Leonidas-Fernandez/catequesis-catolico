@@ -49,6 +49,11 @@ function createCatechesisLevels(db) {
       description: 'Nivel de catequesis juvenil.',
       displayOrder: 2,
     },
+    {
+      name: 'catequesis_bautismal',
+      description: 'Nivel de catequesis bautismal.',
+      displayOrder: 3,
+    },
   ];
 
   const findLevel = db.prepare(

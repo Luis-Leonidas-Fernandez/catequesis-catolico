@@ -81,6 +81,12 @@ sudo systemctl restart catequesis-san-pedro
 sudo journalctl -u catequesis-san-pedro -f
 ```
 
+## Recuperación de contraseña
+
+La recuperación por email usa `APP_BASE_URL` para generar el enlace público y las variables SMTP para enviarlo. Configurá ambas con valores reales antes de habilitarla.
+
+Los enlaces vencen a los 15 minutos y son de un solo uso. La configuración actual de `express-session` usa el store en memoria predeterminado, que no permite revocar de forma confiable todas las sesiones activas de un usuario por ID. Un restablecimiento invalida todos sus enlaces de recuperación, pero no cierra otras sesiones adultas ya activas. Para exigir ese cierre global en producción, migrá a un store de sesiones persistente con un índice por usuario.
+
 ## Verificación
 
 ```bash

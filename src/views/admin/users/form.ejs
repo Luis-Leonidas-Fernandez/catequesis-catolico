@@ -3,6 +3,15 @@
   const formUser = user || {};
   const selectedParish = parishes.find((parish) => Number(formUser.parishId) === parish.id);
   const selectedRole = formUser.role || '';
+  const selectedCatechesisLevelIds = Array.isArray(formUser.catechesisLevelIds)
+    ? formUser.catechesisLevelIds.map(Number)
+    : [];
+  const roleLabels = {
+    admin: 'Administrador',
+    coordinador_zonal: 'Coordinador zonal',
+    coordinador_parroquial: 'Coordinador parroquial',
+    catequista: 'Catequista',
+  };
 %>
 
 <%- include('../../layout', {
@@ -111,11 +120,32 @@
               <select class="form-select ${errors.role ? 'is-invalid' : ''}" id="role" name="role" required>
                 <option value="">Seleccionar rol</option>
                 ${roles.map((role) => `
-                  <option value="${escapeHtml(role)}" ${formUser.role === role ? 'selected' : ''}>${escapeHtml(role)}</option>
+                  <option value="${escapeHtml(role)}" ${formUser.role === role ? 'selected' : ''}>${escapeHtml(roleLabels[role] || role)}</option>
                 `).join('')}
               </select>
               ${errors.role ? `<div class="invalid-feedback">${escapeHtml(errors.role)}</div>` : ''}
             </div>
+
+            <fieldset class="admin-form-field admin-form-field--full user-form-field">
+              <legend class="form-label mb-2">Niveles habilitados para catequista</legend>
+              <p class="form-text mt-0">Se aplican solo al rol Catequista. Los nuevos catequistas reciben los tres niveles por defecto.</p>
+              <div class="d-flex flex-wrap gap-3">
+                ${catechesisLevels.map((level) => `
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      id="catechesisLevel${level.id}"
+                      name="catechesisLevelIds"
+                      type="checkbox"
+                      value="${level.id}"
+                      ${selectedCatechesisLevelIds.includes(level.id) ? 'checked' : ''}
+                    />
+                    <label class="form-check-label" for="catechesisLevel${level.id}">${escapeHtml(level.name)}</label>
+                  </div>
+                `).join('')}
+              </div>
+              ${errors.catechesisLevelIds ? `<div class="invalid-feedback d-block">${escapeHtml(errors.catechesisLevelIds)}</div>` : ''}
+            </fieldset>
 
             <div class="admin-form-field user-form-field">
               <label class="form-label" for="parishId">Parroquia</label>

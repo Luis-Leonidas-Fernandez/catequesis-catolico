@@ -22,6 +22,15 @@ function listUsers() {
     .all();
 }
 
+function listCatechistLevelIds(catechistId) {
+  return db.prepare(`
+    SELECT catechesis_level_id
+    FROM catechist_levels
+    WHERE catechist_id = ?
+    ORDER BY catechesis_level_id ASC
+  `).all(catechistId).map((row) => row.catechesis_level_id);
+}
+
 function listActiveParishes() {
   return db
     .prepare(
@@ -56,7 +65,7 @@ function listCatechistsByParish(parishId) {
           AND groups.deleted_at IS NULL
         WHERE users.deleted_at IS NULL
           AND users.parish_id = ?
-          AND users.role IN ('catequista_familiar', 'catequista_juvenil')
+          AND users.role = 'catequista'
         GROUP BY users.id
         ORDER BY users.is_active DESC, users.name ASC
       `,
@@ -160,6 +169,32 @@ function deactivateUser(id) {
     .run(id);
 }
 
+function activateInactiveUser(id) {
+  return db
+    .prepare(
+      `
+        UPDATE users
+        SET is_active = 1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+          AND is_active = 0
+          AND deleted_at IS NULL
+      `,
+    )
+    .run(id);
+}
+
+function replaceCatechistLevels(catechistId, levelIds) {
+  db.prepare('DELETE FROM catechist_levels WHERE catechist_id = ?').run(catechistId);
+  const assignLevel = db.prepare(
+    'INSERT INTO catechist_levels (catechist_id, catechesis_level_id) VALUES (?, ?)',
+  );
+
+  for (const levelId of levelIds) {
+    assignLevel.run(catechistId, levelId);
+  }
+}
+
 function createAuditLog(entry) {
   return db
     .prepare(
@@ -182,14 +217,17 @@ function runInTransaction(callback) {
 }
 
 module.exports = {
+  activateInactiveUser,
   createAuditLog,
   createUser,
   deactivateUser,
   findUserByEmail,
   findUserById,
   listActiveParishes,
+  listCatechistLevelIds,
   listCatechistsByParish,
   listUsers,
   runInTransaction,
+  replaceCatechistLevels,
   updateUser,
 };

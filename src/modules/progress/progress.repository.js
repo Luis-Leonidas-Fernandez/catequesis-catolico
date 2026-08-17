@@ -58,7 +58,7 @@ function listGroupsForUser(user) {
   const params = [];
   let where = 'WHERE groups.deleted_at IS NULL';
 
-  if (user.role === 'catequista_familiar' || user.role === 'catequista_juvenil') {
+  if (user.role === 'catequista') {
     where += ' AND groups.catechist_id = ?';
     params.push(user.id);
   }
@@ -97,7 +97,7 @@ function listChildrenProgressForUser(user) {
       AND groups.deleted_at IS NULL
   `;
 
-  if (user.role === 'catequista_familiar' || user.role === 'catequista_juvenil') {
+  if (user.role === 'catequista') {
     where += ' AND groups.catechist_id = ?';
     params.push(user.id);
   }

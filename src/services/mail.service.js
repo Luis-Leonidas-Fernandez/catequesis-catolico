@@ -65,7 +65,43 @@ async function sendCoordinatorInvitation({ to, registrationUrl, expiresAt, role 
   });
 }
 
+async function sendPasswordResetEmail({ to, resetUrl, expiresAt }) {
+  const transporter = createTransporter();
+
+  return transporter.sendMail({
+    from: env.smtpFrom,
+    to,
+    subject: 'Restablecé tu contraseña de Catequesis San Pedro',
+    text: [
+      'Hola.',
+      '',
+      'Recibimos una solicitud para restablecer tu contraseña.',
+      'El enlace vence en 15 minutos.',
+      '',
+      resetUrl,
+      '',
+      'Si no solicitaste este cambio, podés ignorar este correo.',
+    ].join('\n'),
+    html: `
+      <div style="font-family: Arial, sans-serif; color: #1f2937; line-height: 1.5;">
+        <h1 style="font-size: 22px;">Restablecer contraseña</h1>
+        <p>Recibimos una solicitud para restablecer tu contraseña.</p>
+        <p>El enlace vence en <strong>15 minutos</strong>.</p>
+        <p>
+          <a href="${resetUrl}" style="display:inline-block;padding:12px 18px;border-radius:999px;background:#0f766e;color:#ffffff;text-decoration:none;font-weight:700;">
+            Elegir nueva contraseña
+          </a>
+        </p>
+        <p>Si el botón no funciona, copiá este enlace:</p>
+        <p><a href="${resetUrl}">${resetUrl}</a></p>
+        <p>Si no solicitaste este cambio, podés ignorar este correo.</p>
+      </div>
+    `,
+  });
+}
+
 module.exports = {
   assertSmtpConfigured,
   sendCoordinatorInvitation,
+  sendPasswordResetEmail,
 };

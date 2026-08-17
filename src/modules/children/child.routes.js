@@ -28,34 +28,58 @@ router.get('/admin/children/new', childController.showNewChild);
 router.post('/admin/children', childController.createChild);
 router.get('/admin/children/:id/edit', childController.showEditChild);
 router.post('/admin/children/:id', childController.updateChild);
+router.post('/admin/children/:id/follow-up', childController.updateChildFollowUp);
+router.post('/admin/children/:id/notes', childController.createChildFollowUpNote);
+router.get('/admin/children/:id/notes', childController.listChildFollowUpNotes);
 router.post('/admin/children/:id/deactivate', childController.deactivateChild);
 
 router.get(
   '/children/my',
   requireAuth,
-  requireRole([ROLES.CATEQUISTA_FAMILIAR, ROLES.CATEQUISTA_JUVENIL]),
+  requireRole([ROLES.CATEQUISTA]),
   childController.showMyChildren,
 );
 
 router.get(
   '/children/my/new',
   requireAuth,
-  requireRole([ROLES.CATEQUISTA_FAMILIAR, ROLES.CATEQUISTA_JUVENIL]),
+  requireRole([ROLES.CATEQUISTA]),
   childController.showNewMyChild,
 );
 
 router.post(
   '/children/my',
   requireAuth,
-  requireRole([ROLES.CATEQUISTA_FAMILIAR, ROLES.CATEQUISTA_JUVENIL]),
+  requireRole([ROLES.CATEQUISTA]),
   childController.createMyChild,
 );
 
 router.post(
   '/children/:id/regenerate-code',
   requireAuth,
-  requireRole([ROLES.ADMIN, ROLES.CATEQUISTA_FAMILIAR, ROLES.CATEQUISTA_JUVENIL]),
+  requireRole([ROLES.ADMIN, ROLES.CATEQUISTA]),
   childController.regenerateAccessCode,
+);
+
+router.post(
+  '/children/:id/follow-up',
+  requireAuth,
+  requireRole([ROLES.ADMIN, ROLES.CATEQUISTA]),
+  childController.updateChildFollowUp,
+);
+
+router.post(
+  '/children/:id/notes',
+  requireAuth,
+  requireRole([ROLES.ADMIN, ROLES.CATEQUISTA]),
+  childController.createChildFollowUpNote,
+);
+
+router.get(
+  '/children/:id/notes',
+  requireAuth,
+  requireRole([ROLES.ADMIN, ROLES.CATEQUISTA]),
+  childController.listChildFollowUpNotes,
 );
 
 module.exports = router;

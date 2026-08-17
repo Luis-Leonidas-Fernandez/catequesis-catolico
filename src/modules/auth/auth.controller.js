@@ -51,29 +51,15 @@ const DASHBOARD_BY_ROLE = {
       { href: '/reports/progress.csv', label: 'CSV progreso', description: 'Descargar reporte según tu parroquia.' },
     ],
   },
-  [ROLES.CATEQUISTA_FAMILIAR]: {
-    badge: 'Catequista familiar',
-    heading: 'Dashboard de catequesis familiar',
-    description: 'Acceso al espacio de catequistas familiares.',
+  [ROLES.CATEQUISTA]: {
+    badge: 'Catequista',
+    heading: 'Dashboard de catequesis',
+    description: 'Gestioná tus grupos y contenidos dentro de los niveles que tenés asignados.',
     links: [
       { href: '/dashboard/catequesis', label: 'Catequistas', description: 'Entrar al espacio de catequesis.' },
       { href: '/groups/my', label: 'Mis grupos', description: 'Ver tus grupos asignados.' },
       { href: '/children/my', label: 'Mis niños', description: 'Ver niños asignados a tus grupos.' },
-      { href: '/admin/activities', label: 'Actividades', description: 'Crear y gestionar actividades para tu nivel.' },
-      { href: '/progress/groups', label: 'Progreso', description: 'Ver avance de tus grupos.' },
-      { href: '/guides', label: 'Guías', description: 'Descargar guías anuales.' },
-      { href: '/reports/progress.csv', label: 'CSV progreso', description: 'Descargar reporte de tus grupos.' },
-    ],
-  },
-  [ROLES.CATEQUISTA_JUVENIL]: {
-    badge: 'Catequista juvenil',
-    heading: 'Dashboard de catequesis juvenil',
-    description: 'Acceso al espacio de catequistas juveniles.',
-    links: [
-      { href: '/dashboard/catequesis', label: 'Catequistas', description: 'Entrar al espacio de catequesis.' },
-      { href: '/groups/my', label: 'Mis grupos', description: 'Ver tus grupos asignados.' },
-      { href: '/children/my', label: 'Mis niños', description: 'Ver niños asignados a tus grupos.' },
-      { href: '/admin/activities', label: 'Actividades', description: 'Crear y gestionar actividades para tu nivel.' },
+      { href: '/admin/activities', label: 'Actividades', description: 'Crear y gestionar actividades para tus niveles.' },
       { href: '/progress/groups', label: 'Progreso', description: 'Ver avance de tus grupos.' },
       { href: '/guides', label: 'Guías', description: 'Descargar guías anuales.' },
       { href: '/reports/progress.csv', label: 'CSV progreso', description: 'Descargar reporte de tus grupos.' },
@@ -107,6 +93,133 @@ function showLogin(req, res) {
   });
 }
 
+function renderPasswordRecovery(res, { email = '', error = '', message = '', status = 200 } = {}) {
+  return res.status(status).render('request-password-reset', {
+    title: 'Recuperar contraseña',
+    csrfToken: res.locals.csrfToken,
+    email,
+    error,
+    message,
+    ...getLoginMediaViewModel(),
+  });
+}
+
+function showPasswordRecovery(req, res) {
+  if (req.session.userId) {
+    return res.redirect('/dashboard');
+  }
+
+  return renderPasswordRecovery(res);
+}
+
+async function requestPasswordRecovery(req, res) {
+  const email = String(req.body.email || '').trim().toLowerCase();
+
+  try {
+    const result = await authService.requestPasswordReset(email, { ip: req.ip });
+
+    if (!result.ok) {
+      return renderPasswordRecovery(res, {
+        email,
+        status: 503,
+        error: 'No pudimos procesar la solicitud en este momento. Probá nuevamente más tarde.',
+      });
+    }
+
+    return renderPasswordRecovery(res, {
+      message: 'Si existe una cuenta activa con ese email, te enviamos instrucciones para restablecer la contraseña.',
+    });
+  } catch (error) {
+    return renderPasswordRecovery(res, {
+      email,
+      status: 503,
+      error: 'No pudimos procesar la solicitud en este momento. Probá nuevamente más tarde.',
+    });
+  }
+}
+
+function renderPasswordReset(res, { token = '', error = '', passwordError = '', status = 200 } = {}) {
+  return res.status(status).render('reset-password', {
+    title: 'Restablecer contraseña',
+    csrfToken: res.locals.csrfToken,
+    token,
+    error,
+    passwordError,
+    ...getLoginMediaViewModel(),
+  });
+}
+
+function showPasswordReset(req, res) {
+  if (req.session.userId) {
+    return res.redirect('/dashboard');
+  }
+
+  try {
+    const token = String(req.query.token || '').trim();
+    const resetToken = authService.findValidPasswordResetToken(token);
+
+    if (!resetToken) {
+      authService.recordPasswordResetFailure({ ip: req.ip, reason: 'invalid_or_expired_token_view' });
+      return renderPasswordReset(res, {
+        error: 'Este enlace no es válido o venció. Solicitá uno nuevo.',
+      });
+    }
+
+    return renderPasswordReset(res, { token });
+  } catch (error) {
+    return renderPasswordReset(res, {
+      status: 503,
+      error: 'No pudimos procesar el enlace en este momento. Probá nuevamente más tarde.',
+    });
+  }
+}
+
+async function resetPassword(req, res) {
+  try {
+    const token = String(req.body.token || '').trim();
+    const resetToken = authService.findValidPasswordResetToken(token);
+
+    if (!resetToken) {
+      authService.recordPasswordResetFailure({ ip: req.ip, reason: 'invalid_or_expired_token_submit' });
+      return renderPasswordReset(res, {
+        status: 422,
+        error: 'Este enlace no es válido o venció. Solicitá uno nuevo.',
+      });
+    }
+
+    const passwordError = authService.validateNewPassword(req.body.password);
+
+    if (passwordError) {
+      authService.recordPasswordResetFailure({
+        userId: resetToken.user_id,
+        ip: req.ip,
+        reason: 'password_validation_failed',
+      });
+      return renderPasswordReset(res, {
+        token,
+        status: 422,
+        passwordError,
+      });
+    }
+
+    const completedReset = await authService.resetPassword(token, req.body.password, { ip: req.ip });
+
+    if (!completedReset) {
+      return renderPasswordReset(res, {
+        status: 422,
+        error: 'Este enlace no es válido o venció. Solicitá uno nuevo.',
+      });
+    }
+
+    return res.redirect('/login?message=Contrase%C3%B1a%20actualizada.%20Inici%C3%A1%20sesi%C3%B3n%20con%20tu%20nueva%20contrase%C3%B1a.');
+  } catch (error) {
+    return renderPasswordReset(res, {
+      status: 503,
+      error: 'No pudimos actualizar la contraseña en este momento. Probá nuevamente más tarde.',
+    });
+  }
+}
+
 function showSplash(req, res) {
   if (req.session.userId) {
     return res.redirect('/dashboard');
@@ -129,18 +242,20 @@ function showSplash(req, res) {
 
 
 function buildRegisterViewModel(overrides = {}) {
-  const options = userService.getUserFormOptions();
+  const options = userService.getSelfRegistrationCatechistFormOptions();
 
   return {
     errors: {},
     form: {
       name: '',
       email: '',
-      role: ROLES.CATEQUISTA_FAMILIAR,
+      role: ROLES.CATEQUISTA,
       parishId: '',
+      catechesisLevelIds: [],
     },
     roles: SELF_REGISTRATION_ROLES,
     parishes: options.parishes,
+    catechesisLevels: options.catechesisLevels,
     ...overrides,
   };
 }
@@ -178,8 +293,9 @@ async function registerCatechist(req, res, next) {
           form: {
             name: validation.input.name,
             email: validation.input.email,
-            role: validation.input.role || ROLES.CATEQUISTA_FAMILIAR,
+            role: validation.input.role || ROLES.CATEQUISTA,
             parishId: validation.input.parishId || '',
+            catechesisLevelIds: validation.input.catechesisLevelIds,
           },
         }),
       });
@@ -200,6 +316,7 @@ async function registerCatechist(req, res, next) {
             email: validation.input.email,
             role: validation.input.role,
             parishId: validation.input.parishId || '',
+            catechesisLevelIds: validation.input.catechesisLevelIds,
           },
         }),
       });
@@ -329,7 +446,7 @@ function showCatechistDashboard(req, res) {
     links: [
       { href: '/groups/my', label: 'Mis grupos', description: 'Ver y crear tus grupos de catequesis.' },
       { href: '/children/my', label: 'Mis niños', description: 'Ver y registrar catecúmenos asignados.' },
-      { href: '/admin/activities', label: 'Actividades', description: 'Crear y gestionar actividades para tu nivel.' },
+      { href: '/admin/activities', label: 'Actividades', description: 'Crear y gestionar actividades para tus niveles.' },
       { href: '/progress/groups', label: 'Progreso', description: 'Ver avance de tus grupos.' },
       { href: '/guides', label: 'Guías', description: 'Subir y descargar guías anuales.' },
       { href: '/reports/progress.csv', label: 'CSV progreso', description: 'Descargar reporte de tus grupos.' },
@@ -342,6 +459,10 @@ function showCatechistDashboard(req, res) {
 
 module.exports = {
   showLogin,
+  showPasswordRecovery,
+  requestPasswordRecovery,
+  showPasswordReset,
+  resetPassword,
   showSplash,
   showCatechistRegister,
   registerCatechist,

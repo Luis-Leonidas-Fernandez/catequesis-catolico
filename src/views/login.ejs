@@ -135,6 +135,10 @@
             <button class="btn btn-primary login-submit" type="submit">
               Entrar
             </button>
+
+            <p class="login-secondary-action mt-1" data-login-adult-only>
+              <a href="/recuperar-cuenta">¿Olvidaste tu contraseña?</a>
+            </p>
           </form>
 
           <form class="login-form login-panel${isChildPanelActive ? ' is-active' : ''}" action="/acceso-nino" method="post" data-login-panel="child" novalidate ${isChildPanelActive ? '' : 'hidden'}>

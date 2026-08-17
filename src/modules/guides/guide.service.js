@@ -2,24 +2,11 @@ const guideRepository = require('./guide.repository');
 const { resolveStoredGuidePath } = require('./guide-upload');
 const mediaService = require('../media/media.service');
 const childRepository = require('../children/child.repository');
-const { ROLES } = require('../auth/roles');
-
-function isCoordinator(user) {
-  return user.role === ROLES.COORDINADOR_ZONAL || user.role === ROLES.COORDINADOR_PARROQUIAL;
-}
-
-function isCatechist(user) {
-  return user.role === ROLES.CATEQUISTA_FAMILIAR || user.role === ROLES.CATEQUISTA_JUVENIL;
-}
+const { canUploadGuide: hasGuideUploadPermission, isAdmin, isCatechist } = require('../auth/role-permissions');
+const catechistLevelService = require('../catechist-levels/catechist-level.service');
 
 function canUploadGuide(user) {
-  return [
-    ROLES.ADMIN,
-    ROLES.COORDINADOR_ZONAL,
-    ROLES.COORDINADOR_PARROQUIAL,
-    ROLES.CATEQUISTA_FAMILIAR,
-    ROLES.CATEQUISTA_JUVENIL,
-  ].includes(user.role);
+  return hasGuideUploadPermission(user);
 }
 
 function canDownloadGuide(user) {
@@ -31,7 +18,7 @@ function canDeleteGuide(user, guide) {
     return false;
   }
 
-  if (user.role === ROLES.ADMIN) {
+  if (isAdmin(user)) {
     return true;
   }
 
@@ -39,7 +26,7 @@ function canDeleteGuide(user, guide) {
 }
 
 function getGuideParishId(input, actor) {
-  if (actor.role === ROLES.ADMIN) {
+  if (isAdmin(actor)) {
     return Number(input.parishId || actor.parishId);
   }
 
@@ -51,7 +38,7 @@ function canAccessGuide(user, guide) {
     return false;
   }
 
-  if (user.role === ROLES.ADMIN) {
+  if (isAdmin(user)) {
     return true;
   }
 
@@ -65,12 +52,8 @@ function getAllowedCatechesisLevels(user) {
     return levels;
   }
 
-  if (user.role === ROLES.CATEQUISTA_FAMILIAR) {
-    return levels.filter((level) => level.name === 'catequesis_familiar');
-  }
-
-  if (user.role === ROLES.CATEQUISTA_JUVENIL) {
-    return levels.filter((level) => level.name === 'catequesis_juvenil');
+  if (isCatechist(user)) {
+    return catechistLevelService.getAllowedLevels(user);
   }
 
   return levels;
@@ -79,7 +62,7 @@ function getAllowedCatechesisLevels(user) {
 function getAllowedParishes(user) {
   const parishes = guideRepository.listActiveParishes();
 
-  if (!user || user.role === ROLES.ADMIN) {
+  if (!user || isAdmin(user)) {
     return parishes;
   }
 
@@ -94,7 +77,7 @@ function getGuideFormOptions(user) {
 }
 
 function listGuides(user) {
-  const filters = user && user.role !== ROLES.ADMIN
+  const filters = user && !isAdmin(user)
     ? { parishId: Number(user.parishId) || 0 }
     : {};
 

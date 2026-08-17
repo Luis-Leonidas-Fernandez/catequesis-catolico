@@ -1,13 +1,22 @@
 const bcrypt = require('bcrypt');
 const userRepository = require('./user.repository');
-const { ADMINISTRATIVE_ROLES } = require('../auth/roles');
+const { MANAGEABLE_USER_ROLES, ROLES } = require('../auth/roles');
+const catechistLevelService = require('../catechist-levels/catechist-level.service');
 
 const BCRYPT_SALT_ROUNDS = 10;
 
 function getUserFormOptions() {
   return {
-    roles: ADMINISTRATIVE_ROLES,
+    roles: MANAGEABLE_USER_ROLES,
     parishes: userRepository.listActiveParishes(),
+    catechesisLevels: catechistLevelService.listAssignableLevels(),
+  };
+}
+
+function getSelfRegistrationCatechistFormOptions() {
+  return {
+    parishes: userRepository.listActiveParishes(),
+    catechesisLevels: catechistLevelService.listSelfRegistrationLevels(),
   };
 }
 
@@ -16,7 +25,52 @@ function listUsers() {
 }
 
 function getUserForEdit(id) {
-  return userRepository.findUserById(id);
+  const user = userRepository.findUserById(id);
+
+  return user
+    ? { ...user, catechesisLevelIds: userRepository.listCatechistLevelIds(user.id) }
+    : null;
+}
+
+function resolveCatechistLevelIds(input, existingUser = null) {
+  if (input.role !== ROLES.CATEQUISTA) {
+    return [];
+  }
+
+  if (input.hasCatechesisLevelSelection) {
+    return input.catechesisLevelIds;
+  }
+
+  if (existingUser && existingUser.role === ROLES.CATEQUISTA) {
+    return userRepository.listCatechistLevelIds(existingUser.id);
+  }
+
+  return catechistLevelService.listAssignableLevels().map((level) => level.id);
+}
+
+function validateCatechistLevels(levelIds) {
+  return catechistLevelService.validateLevelIds(levelIds)
+    ? null
+    : 'Los niveles seleccionados no son válidos o ya no están activos.';
+}
+
+function validateSelfRegistrationCatechistLevels(input) {
+  if (
+    input.hasCatechesisLevelSelection === false
+    || !Array.isArray(input.catechesisLevelIds)
+    || input.catechesisLevelIds.length === 0
+  ) {
+    return 'Seleccioná al menos un nivel de catequesis.';
+  }
+
+  if (
+    input.hasInvalidCatechesisLevelIds
+    || !catechistLevelService.validateSelfRegistrationLevelIds(input.catechesisLevelIds)
+  ) {
+    return 'Los niveles seleccionados no son válidos o ya no están activos.';
+  }
+
+  return null;
 }
 
 function assertUniqueEmail(email, currentUserId = null) {
@@ -42,6 +96,12 @@ async function createUser(input, actorId) {
   }
 
   const passwordHash = await bcrypt.hash(input.password, BCRYPT_SALT_ROUNDS);
+  const catechesisLevelIds = resolveCatechistLevelIds(input);
+  const levelError = validateCatechistLevels(catechesisLevelIds);
+
+  if (levelError) {
+    return { ok: false, errors: { catechesisLevelIds: levelError } };
+  }
 
   const userId = userRepository.runInTransaction(() => {
     const createdUserId = userRepository.createUser({
@@ -51,6 +111,17 @@ async function createUser(input, actorId) {
       passwordHash,
       role: input.role,
     });
+
+    if (input.role === ROLES.CATEQUISTA) {
+      userRepository.replaceCatechistLevels(createdUserId, catechesisLevelIds);
+      userRepository.createAuditLog({
+        userId: actorId,
+        action: 'catechist_levels_assigned',
+        entityType: 'users',
+        entityId: createdUserId,
+        metadata: { catechesisLevelIds, reason: 'user_created' },
+      });
+    }
 
     userRepository.createAuditLog({
       userId: actorId,
@@ -74,6 +145,12 @@ async function createUser(input, actorId) {
 
 
 async function createSelfRegisteredCatechist(input, metadata = {}) {
+  const levelError = validateSelfRegistrationCatechistLevels(input);
+
+  if (levelError) {
+    return { ok: false, errors: { catechesisLevelIds: levelError } };
+  }
+
   const emailError = assertUniqueEmail(input.email);
 
   if (emailError) {
@@ -86,6 +163,7 @@ async function createSelfRegisteredCatechist(input, metadata = {}) {
   }
 
   const passwordHash = await bcrypt.hash(input.password, BCRYPT_SALT_ROUNDS);
+  const catechesisLevelIds = input.catechesisLevelIds.map(Number);
 
   const userId = userRepository.runInTransaction(() => {
     const createdUserId = userRepository.createUser({
@@ -94,6 +172,15 @@ async function createSelfRegisteredCatechist(input, metadata = {}) {
       email: input.email,
       passwordHash,
       role: input.role,
+    });
+
+    userRepository.replaceCatechistLevels(createdUserId, catechesisLevelIds);
+    userRepository.createAuditLog({
+      userId: null,
+      action: 'catechist_levels_assigned',
+      entityType: 'users',
+      entityId: createdUserId,
+      metadata: { catechesisLevelIds, reason: 'self_registration' },
     });
 
     userRepository.createAuditLog({
@@ -143,6 +230,15 @@ async function updateUser(id, input, actorId) {
     ? await bcrypt.hash(input.password, BCRYPT_SALT_ROUNDS)
     : null;
 
+  const catechesisLevelIds = resolveCatechistLevelIds(input, user);
+  const levelError = validateCatechistLevels(catechesisLevelIds);
+
+  if (levelError) {
+    return { ok: false, errors: { catechesisLevelIds: levelError } };
+  }
+
+  const previousLevelIds = userRepository.listCatechistLevelIds(id);
+
   userRepository.runInTransaction(() => {
     userRepository.updateUser({
       id,
@@ -152,6 +248,24 @@ async function updateUser(id, input, actorId) {
       passwordHash,
       role: input.role,
     });
+
+    if (user.role === ROLES.CATEQUISTA || input.role === ROLES.CATEQUISTA) {
+      userRepository.replaceCatechistLevels(id, catechesisLevelIds);
+
+      if (previousLevelIds.join(',') !== catechesisLevelIds.join(',')) {
+        userRepository.createAuditLog({
+          userId: actorId,
+          action: 'catechist_levels_assigned',
+          entityType: 'users',
+          entityId: id,
+          metadata: {
+            previousLevelIds,
+            catechesisLevelIds,
+            reason: 'user_updated',
+          },
+        });
+      }
+    }
 
     userRepository.createAuditLog({
       userId: actorId,
@@ -210,11 +324,76 @@ function deactivateUser(id, actorId) {
   };
 }
 
+function activateUser(id, actorId) {
+  const user = userRepository.findUserById(id);
+
+  if (!user) {
+    return {
+      ok: false,
+      notFound: true,
+    };
+  }
+
+  if (!MANAGEABLE_USER_ROLES.includes(user.role)) {
+    return {
+      ok: false,
+      errors: {
+        user: 'El usuario seleccionado no es administrable desde este listado.',
+      },
+    };
+  }
+
+  if (user.is_active) {
+    return {
+      ok: false,
+      errors: {
+        user: 'El usuario ya está activo.',
+      },
+    };
+  }
+
+  const activated = userRepository.runInTransaction(() => {
+    const result = userRepository.activateInactiveUser(id);
+
+    if (result.changes === 0) {
+      return false;
+    }
+
+    userRepository.createAuditLog({
+      userId: actorId,
+      action: 'admin_user_reactivated',
+      entityType: 'users',
+      entityId: id,
+      metadata: {
+        email: user.email,
+        role: user.role,
+      },
+    });
+
+    return true;
+  });
+
+  if (!activated) {
+    return {
+      ok: false,
+      errors: {
+        user: 'El usuario ya está activo.',
+      },
+    };
+  }
+
+  return {
+    ok: true,
+  };
+}
+
 module.exports = {
+  activateUser,
   createUser,
   createSelfRegisteredCatechist,
   deactivateUser,
   getUserForEdit,
+  getSelfRegistrationCatechistFormOptions,
   getUserFormOptions,
   listUsers,
   updateUser,

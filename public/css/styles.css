@@ -1870,6 +1870,29 @@ code {
   padding: clamp(1.1rem, 3vw, 1.8rem);
 }
 
+.child-baptismal-fields {
+  border: 1px solid rgba(103, 232, 249, 0.22);
+  border-radius: 1rem;
+  background: rgba(15, 23, 42, 0.2);
+  padding: 1rem;
+}
+
+.child-baptismal-fields__header {
+  margin-bottom: 0.85rem;
+}
+
+.child-baptismal-fields__grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 575.98px) {
+  .child-baptismal-fields__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .child-form-actions .admin-resource-primary-action {
   min-width: 10rem;
 }
@@ -3691,6 +3714,144 @@ code {
 
 .my-child-card {
   min-height: 18.25rem;
+}
+
+.my-child-card--follow-up {
+  border-color: rgba(248, 113, 113, 0.72);
+  background: linear-gradient(145deg, rgba(127, 29, 29, 0.38), rgba(51, 24, 34, 0.72));
+  box-shadow: 0 1.25rem 2.5rem rgba(127, 29, 29, 0.2);
+}
+
+.my-child-card__follow-up {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.my-child-card__follow-up textarea {
+  resize: vertical;
+  min-height: 3.5rem;
+}
+
+.my-child-card__follow-up .btn {
+  justify-self: start;
+}
+
+.admin-follow-up-form {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 12rem;
+}
+
+.admin-row--follow-up > td {
+  background: rgba(127, 29, 29, 0.2) !important;
+}
+
+.my-child-card__note-status {
+  color: rgba(226, 232, 240, 0.78);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.child-note-modal[hidden] {
+  display: none;
+}
+
+.child-note-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.child-note-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.76);
+  backdrop-filter: blur(6px);
+}
+
+.child-note-modal__dialog {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 34rem);
+  padding: clamp(1.25rem, 4vw, 2rem);
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, rgba(51, 59, 76, 0.98), rgba(26, 31, 45, 0.98));
+  box-shadow: 0 2rem 5rem rgba(2, 6, 23, 0.55);
+}
+
+.child-note-modal__dialog h2 {
+  margin: 1rem 0 0.25rem;
+}
+
+.child-note-modal__dialog p {
+  color: rgba(226, 232, 240, 0.72);
+  margin-bottom: 1rem;
+}
+
+.child-note-history {
+  display: grid;
+  gap: 0.75rem;
+  max-height: 22rem;
+  overflow-y: auto;
+  margin: 1rem 0;
+  padding-right: 0.25rem;
+}
+
+.child-note-history__item {
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 0.85rem;
+  background: rgba(15, 23, 42, 0.3);
+}
+
+.child-note-history__item small {
+  color: rgba(125, 211, 252, 0.82);
+  font-weight: 700;
+}
+
+.child-note-history__item p {
+  margin: 0.45rem 0 0;
+  color: #f8fafc;
+  white-space: pre-wrap;
+}
+
+.child-note-history__loading {
+  margin: 0;
+}
+
+.child-note-modal__dialog textarea {
+  min-height: 9rem;
+  resize: vertical;
+}
+
+.child-note-modal__close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.85rem;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 50%;
+  color: #e2e8f0;
+  background: rgba(148, 163, 184, 0.16);
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.child-note-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.note-modal-open {
+  overflow: hidden;
 }
 
 .my-child-card:nth-child(1) {

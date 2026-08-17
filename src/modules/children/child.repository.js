@@ -6,6 +6,19 @@ function baseChildSelect(whereClause) {
       children.id,
       children.first_name,
       children.last_name,
+      children.guardian_name,
+      children.guardian_relationship,
+      children.guardian_phone,
+      children.guardian_email,
+      children.godfather_name,
+      children.godmother_name,
+      children.follow_up_note,
+      children.follow_up_active,
+      (
+        SELECT COUNT(*)
+        FROM child_follow_up_notes
+        WHERE child_follow_up_notes.child_id = children.id
+      ) AS follow_up_note_count,
       children.avatar_path,
       children.access_code_hash,
       children.group_id,
@@ -410,11 +423,14 @@ function findActiveGroupById(id) {
   return db
     .prepare(
       `
-        SELECT id, parish_id, catechesis_level_id, catechist_id, name
+        SELECT groups.id, groups.parish_id, groups.catechesis_level_id,
+               groups.catechist_id, groups.name,
+               catechesis_levels.name AS catechesis_level_name
         FROM groups
-        WHERE id = ?
-          AND is_active = 1
-          AND deleted_at IS NULL
+        INNER JOIN catechesis_levels ON catechesis_levels.id = groups.catechesis_level_id
+        WHERE groups.id = ?
+          AND groups.is_active = 1
+          AND groups.deleted_at IS NULL
         LIMIT 1
       `,
     )
@@ -431,18 +447,30 @@ function createChild(child) {
           catechesis_level_id,
           first_name,
           last_name,
+          guardian_name,
+          guardian_relationship,
+          guardian_phone,
+          guardian_email,
+          godfather_name,
+          godmother_name,
           avatar_path,
           access_code_hash
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
     )
     .run(
       child.groupId,
       child.parishId,
       child.catechesisLevelId,
-      child.firstName,
-      child.lastName,
+          child.firstName,
+          child.lastName,
+          child.guardianName,
+          child.guardianRelationship,
+          child.guardianPhone,
+      child.guardianEmail,
+      child.godfatherName,
+      child.godmotherName,
       child.avatarPath,
       child.accessCodeHash,
     );
@@ -460,6 +488,12 @@ function updateChild(child) {
             catechesis_level_id = ?,
             first_name = ?,
             last_name = ?,
+            guardian_name = ?,
+            guardian_relationship = ?,
+            guardian_phone = ?,
+            guardian_email = ?,
+            godfather_name = ?,
+            godmother_name = ?,
             avatar_path = ?,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
@@ -472,9 +506,61 @@ function updateChild(child) {
       child.catechesisLevelId,
       child.firstName,
       child.lastName,
+      child.guardianName,
+      child.guardianRelationship,
+      child.guardianPhone,
+      child.guardianEmail,
+      child.godfatherName,
+      child.godmotherName,
       child.avatarPath,
       child.id,
     );
+}
+
+function updateChildFollowUp(id, note, active) {
+  return db
+    .prepare(
+      `
+        UPDATE children
+        SET follow_up_active = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+          AND deleted_at IS NULL
+      `,
+    )
+    .run(active ? 1 : 0, id);
+}
+
+function createChildFollowUpNote(childId, note, userId) {
+  const result = db
+    .prepare(
+      `
+        INSERT INTO child_follow_up_notes (child_id, note, created_by)
+        VALUES (?, ?, ?)
+      `,
+    )
+    .run(childId, note, userId || null);
+
+  db.prepare(
+    `UPDATE children SET follow_up_note = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+  ).run(note, childId);
+
+  return result.lastInsertRowid;
+}
+
+function listChildFollowUpNotes(childId) {
+  return db
+    .prepare(
+      `
+        SELECT notes.id, notes.note, notes.created_at,
+               users.name AS author_name
+        FROM child_follow_up_notes notes
+        LEFT JOIN users ON users.id = notes.created_by
+        WHERE notes.child_id = ?
+        ORDER BY notes.created_at DESC, notes.id DESC
+      `,
+    )
+    .all(childId);
 }
 
 function updateAccessCodeHash(id, accessCodeHash) {
@@ -651,5 +737,8 @@ module.exports = {
   saveQuestionAttempt,
   updateAccessCodeHash,
   updateChild,
+  updateChildFollowUp,
+  createChildFollowUpNote,
+  listChildFollowUpNotes,
   updateQuestionAttempt,
 };

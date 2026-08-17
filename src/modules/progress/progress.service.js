@@ -64,8 +64,7 @@ function canViewGroupProgress(user) {
     user.role === ROLES.ADMIN ||
     user.role === ROLES.COORDINADOR_ZONAL ||
     user.role === ROLES.COORDINADOR_PARROQUIAL ||
-    user.role === ROLES.CATEQUISTA_FAMILIAR ||
-    user.role === ROLES.CATEQUISTA_JUVENIL
+    user.role === ROLES.CATEQUISTA
   );
 }
 

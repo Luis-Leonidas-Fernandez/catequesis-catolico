@@ -8,7 +8,7 @@
             <span class="dashboard-user-icon" aria-hidden="true">
               <i class="bi bi-person-fill"></i>
             </span>
-            <span class="dashboard-user-role">${escapeHtml(user.role)}</span>
+            <span class="dashboard-user-role">${escapeHtml(badge || user.role)}</span>
           </div>
 
           <form action="/logout" method="post">

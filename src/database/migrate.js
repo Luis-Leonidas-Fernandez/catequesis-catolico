@@ -36,13 +36,31 @@ function runMigration(fileName) {
     throw new Error(`La migración ${fileName} no exporta una función up(db).`);
   }
 
-  const execute = db.transaction(() => {
+  const executeMigration = () => {
     migration.up(db);
 
     db.prepare('INSERT INTO schema_migrations (id) VALUES (?)').run(fileName);
-  });
+  };
 
-  execute();
+  if (migration.requiresForeignKeysDisabled) {
+    const foreignKeysWereEnabled = db.pragma('foreign_keys', { simple: true }) === 1;
+
+    if (foreignKeysWereEnabled) {
+      db.pragma('foreign_keys = OFF');
+    }
+
+    try {
+      db.transaction(executeMigration)();
+    } finally {
+      if (foreignKeysWereEnabled) {
+        db.pragma('foreign_keys = ON');
+      }
+    }
+
+    return;
+  }
+
+  db.transaction(executeMigration)();
 }
 
 function runMigrations() {

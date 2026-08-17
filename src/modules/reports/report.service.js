@@ -45,8 +45,7 @@ function canExportProgress(user) {
     ROLES.ADMIN,
     ROLES.COORDINADOR_ZONAL,
     ROLES.COORDINADOR_PARROQUIAL,
-    ROLES.CATEQUISTA_FAMILIAR,
-    ROLES.CATEQUISTA_JUVENIL,
+    ROLES.CATEQUISTA,
   ].includes(user.role);
 }
 

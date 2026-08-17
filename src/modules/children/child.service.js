@@ -4,21 +4,18 @@ const { generateAccessCode } = require('./access-code');
 const childRepository = require('./child.repository');
 const { withAutoImageFormat } = require('../../utils/cloudinary-image');
 const { ROLES } = require('../auth/roles');
+const { isAdmin, isCatechist } = require('../auth/role-permissions');
 
 const BCRYPT_SALT_ROUNDS = 10;
 const CHILD_REMEMBER_DAYS = 30;
 const REMEMBER_COOKIE_SEPARATOR = '.';
 
-function isCatechist(user) {
-  return user.role === ROLES.CATEQUISTA_FAMILIAR || user.role === ROLES.CATEQUISTA_JUVENIL;
-}
-
 function canManageChildren(user) {
-  return user.role === ROLES.ADMIN;
+  return isAdmin(user);
 }
 
 function canAccessChild(user, child) {
-  if (user.role === ROLES.ADMIN) {
+  if (isAdmin(user)) {
     return true;
   }
 
@@ -26,7 +23,7 @@ function canAccessChild(user, child) {
 }
 
 function getAvailableGroups(user) {
-  if (user.role === ROLES.ADMIN) {
+  if (isAdmin(user)) {
     return childRepository.listActiveGroups();
   }
 
@@ -38,7 +35,7 @@ function getAvailableGroups(user) {
 }
 
 function listManageableChildren(user) {
-  if (user.role === ROLES.ADMIN) {
+  if (isAdmin(user)) {
     return childRepository.listChildren();
   }
 
@@ -69,7 +66,7 @@ function validateGroupAccess(input, user) {
     };
   }
 
-  if (user.role !== ROLES.ADMIN && (!isCatechist(user) || group.catechist_id !== user.id)) {
+  if (!isAdmin(user) && (!isCatechist(user) || group.catechist_id !== user.id)) {
     return {
       error: 'No tenés permiso para gestionar niños en ese grupo.',
       group: null,
@@ -80,6 +77,29 @@ function validateGroupAccess(input, user) {
     error: null,
     group,
   };
+}
+
+function validateBaptismalGuardians(input, group) {
+  if (group.catechesis_level_name !== 'catequesis_bautismal') {
+    return {};
+  }
+
+  const errors = {};
+  if (!input.godfatherName) {
+    errors.godfatherName = 'El nombre del padrino es obligatorio para catequesis bautismal.';
+  }
+  if (!input.godmotherName) {
+    errors.godmotherName = 'El nombre de la madrina es obligatorio para catequesis bautismal.';
+  }
+  return errors;
+}
+
+function normalizeGodparentsForGroup(input, group) {
+  if (group.catechesis_level_name === 'catequesis_bautismal') {
+    return input;
+  }
+
+  return { ...input, godfatherName: null, godmotherName: null };
 }
 
 async function hashAccessCode(accessCode) {
@@ -190,12 +210,19 @@ async function createChild(input, actor) {
     };
   }
 
+  const guardianErrors = validateBaptismalGuardians(input, groupAccess.group);
+  if (Object.keys(guardianErrors).length > 0) {
+    return { ok: false, errors: guardianErrors };
+  }
+
+  const childInput = normalizeGodparentsForGroup(input, groupAccess.group);
+
   const accessCode = generateAccessCode();
   const accessCodeHash = await hashAccessCode(accessCode);
 
   const childId = childRepository.runInTransaction(() => {
     const createdChildId = childRepository.createChild({
-      ...input,
+      ...childInput,
       parishId: groupAccess.group.parish_id,
       catechesisLevelId: groupAccess.group.catechesis_level_id,
       accessCodeHash,
@@ -245,10 +272,17 @@ function updateChild(id, input, actor) {
     };
   }
 
+  const guardianErrors = validateBaptismalGuardians(input, groupAccess.group);
+  if (Object.keys(guardianErrors).length > 0) {
+    return { ok: false, errors: guardianErrors };
+  }
+
+  const childInput = normalizeGodparentsForGroup(input, groupAccess.group);
+
   childRepository.runInTransaction(() => {
     childRepository.updateChild({
       id,
-      ...input,
+      ...childInput,
       parishId: groupAccess.group.parish_id,
       catechesisLevelId: groupAccess.group.catechesis_level_id,
     });
@@ -269,6 +303,68 @@ function updateChild(id, input, actor) {
   return {
     ok: true,
   };
+}
+
+function updateChildFollowUp(id, input, actor) {
+  const child = getChildForEdit(id, actor);
+
+  if (!child) {
+    return { ok: false, notFound: true };
+  }
+
+  const note = String(input.note || '').trim();
+  if (note.length > 1000) {
+    return { ok: false, error: 'La nota no puede superar los 1000 caracteres.' };
+  }
+
+  const active = input.active === true || input.active === '1' || input.active === 'on';
+  childRepository.runInTransaction(() => {
+    childRepository.updateChildFollowUp(id, note, active);
+    childRepository.createAuditLog({
+      userId: actor.id,
+      action: active ? 'child_follow_up_started' : 'child_follow_up_stopped',
+      entityType: 'children',
+      entityId: id,
+      metadata: { notePresent: Boolean(note) },
+    });
+  });
+
+  return { ok: true };
+}
+
+function createChildFollowUpNote(id, input, actor) {
+  const child = getChildForEdit(id, actor);
+
+  if (!child) {
+    return { ok: false, notFound: true };
+  }
+
+  const note = String(input.note || '').trim();
+  if (!note) {
+    return { ok: false, error: 'La nota no puede estar vacía.' };
+  }
+  if (note.length > 1000) {
+    return { ok: false, error: 'La nota no puede superar los 1000 caracteres.' };
+  }
+
+  childRepository.runInTransaction(() => {
+    childRepository.createChildFollowUpNote(id, note, actor.id);
+    childRepository.createAuditLog({
+      userId: actor.id,
+      action: 'child_follow_up_note_created',
+      entityType: 'children',
+      entityId: id,
+      metadata: { noteLength: note.length },
+    });
+  });
+
+  return { ok: true };
+}
+
+function listChildFollowUpNotes(id, actor) {
+  const child = getChildForEdit(id, actor);
+  if (!child) return { ok: false, notFound: true };
+  return { ok: true, notes: childRepository.listChildFollowUpNotes(id) };
 }
 
 function deactivateChild(id, actor) {
@@ -565,4 +661,7 @@ module.exports = {
   revokeRememberToken,
   regenerateAccessCode,
   updateChild,
+  updateChildFollowUp,
+  createChildFollowUpNote,
+  listChildFollowUpNotes,
 };

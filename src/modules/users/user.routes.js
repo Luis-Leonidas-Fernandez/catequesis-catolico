@@ -14,5 +14,6 @@ router.post('/admin/users', userController.createUser);
 router.get('/admin/users/:id/edit', userController.showEditUser);
 router.post('/admin/users/:id', userController.updateUser);
 router.post('/admin/users/:id/deactivate', userController.deactivateUser);
+router.post('/admin/users/:id/activate', userController.activateUser);
 
 module.exports = router;

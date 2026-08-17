@@ -11,6 +11,7 @@ const {
   accessLimiter,
   childAccessLimiter,
   loginLimiter,
+  passwordResetRequestLimiter,
   uploadLimiter,
 } = require('./middlewares/rate-limit.middleware');
 const {
@@ -49,6 +50,7 @@ app.use(session(sessionConfig));
 app.use('/login', loginLimiter);
 app.use('/registro-catequista', loginLimiter);
 app.use('/registro-coordinador', loginLimiter);
+app.use('/recuperar-cuenta', passwordResetRequestLimiter);
 app.use('/acceso-nino', childAccessLimiter);
 app.use('/access', accessLimiter);
 app.use('/upload', uploadLimiter);
@@ -64,6 +66,8 @@ app.use((req, res, next) => {
     '/login',
     '/registro-catequista',
     '/registro-coordinador',
+    '/recuperar-cuenta',
+    '/restablecer-contrasena',
     '/acceso-nino',
   ]);
 

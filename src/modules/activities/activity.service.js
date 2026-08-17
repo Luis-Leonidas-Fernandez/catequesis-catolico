@@ -1,37 +1,22 @@
 const activityRepository = require('./activity.repository');
 const mediaService = require('../media/media.service');
-const { ROLES } = require('../auth/roles');
+const activityAuthorization = require('./activity.authorization');
+const { isAdmin } = require('../auth/role-permissions');
 
 function getAllowedLevels(user) {
-  const levels = activityRepository.listActiveCatechesisLevels();
-
-  if (user.role === ROLES.ADMIN) {
-    return levels;
-  }
-
-  if (user.role === ROLES.CATEQUISTA_FAMILIAR) {
-    const level = activityRepository.findLevelByName('catequesis_familiar');
-    return level ? [level] : [];
-  }
-
-  if (user.role === ROLES.CATEQUISTA_JUVENIL) {
-    const level = activityRepository.findLevelByName('catequesis_juvenil');
-    return level ? [level] : [];
-  }
-
-  return [];
+  return activityAuthorization.getAllowedLevels(user);
 }
 
 function canManageActivities(user) {
-  return getAllowedLevels(user).length > 0;
+  return activityAuthorization.canManageActivities(user);
 }
 
 function canManageLevel(user, catechesisLevelId) {
-  return getAllowedLevels(user).some((level) => level.id === catechesisLevelId);
+  return activityAuthorization.canManageActivityLevel(user, catechesisLevelId);
 }
 
 function listActivities(user) {
-  if (user.role === ROLES.ADMIN) {
+  if (isAdmin(user)) {
     return activityRepository.listActivities();
   }
 
@@ -40,7 +25,7 @@ function listActivities(user) {
     return [];
   }
 
-  return activityRepository.listActivitiesByLevel(allowedLevels[0].id);
+  return activityRepository.listActivitiesByLevels(allowedLevels.map((level) => level.id));
 }
 
 function getActivityForEdit(id, user) {

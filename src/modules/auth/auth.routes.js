@@ -7,6 +7,10 @@ const { requireRole } = require('../../middlewares/role.middleware');
 const router = express.Router();
 
 router.get('/login', authController.showLogin);
+router.get('/recuperar-cuenta', authController.showPasswordRecovery);
+router.post('/recuperar-cuenta', authController.requestPasswordRecovery);
+router.get('/restablecer-contrasena', authController.showPasswordReset);
+router.post('/restablecer-contrasena', authController.resetPassword);
 router.get('/splash', authController.showSplash);
 router.get('/registro-catequista', authController.showCatechistRegister);
 router.post('/registro-catequista', authController.registerCatechist);
@@ -29,7 +33,7 @@ router.get(
 router.get(
   '/dashboard/catequesis',
   requireAuth,
-  requireRole([ROLES.CATEQUISTA_FAMILIAR, ROLES.CATEQUISTA_JUVENIL]),
+  requireRole([ROLES.CATEQUISTA]),
   authController.showCatechistDashboard,
 );
 

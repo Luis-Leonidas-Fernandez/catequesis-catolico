@@ -1,40 +1,19 @@
 const groupRepository = require('./group.repository');
 const { ROLES } = require('../auth/roles');
+const { isAdmin, isCatechist } = require('../auth/role-permissions');
+const catechistLevelService = require('../catechist-levels/catechist-level.service');
+const groupAuthorization = require('./group.authorization');
 
 function canManageGroups(user) {
-  return user.role === ROLES.ADMIN || user.role === ROLES.COORDINADOR_PARROQUIAL;
-}
-
-function canManageParish(user, parishId) {
-  if (user.role === ROLES.ADMIN) {
-    return true;
-  }
-
-  return user.role === ROLES.COORDINADOR_PARROQUIAL && user.parishId === parishId;
-}
-
-function isCatechist(user) {
-  return user.role === ROLES.CATEQUISTA_FAMILIAR || user.role === ROLES.CATEQUISTA_JUVENIL;
+  return isAdmin(user) || user.role === ROLES.COORDINADOR_PARROQUIAL;
 }
 
 function canViewOwnGroups(user) {
-  return isCatechist(user);
-}
-
-function getCatechistLevelName(role) {
-  if (role === ROLES.CATEQUISTA_FAMILIAR) {
-    return 'catequesis_familiar';
-  }
-
-  if (role === ROLES.CATEQUISTA_JUVENIL) {
-    return 'catequesis_juvenil';
-  }
-
-  return null;
+  return groupAuthorization.canManageOwnGroups(user);
 }
 
 function listManageableGroups(user) {
-  if (user.role === ROLES.ADMIN) {
+  if (isAdmin(user)) {
     return groupRepository.listGroups();
   }
 
@@ -54,18 +33,16 @@ function listOwnGroups(user) {
 }
 
 function getGroupFormOptions(user) {
-  const parishes = user.role === ROLES.ADMIN
+  const parishes = isAdmin(user)
     ? groupRepository.listActiveParishes()
     : groupRepository.listActiveParishes().filter((parish) => parish.id === Number(user.parishId));
 
   const allLevels = groupRepository.listActiveCatechesisLevels();
 
   if (isCatechist(user)) {
-    const levelName = getCatechistLevelName(user.role);
-
     return {
       parishes,
-      catechesisLevels: allLevels.filter((level) => level.name === levelName),
+      catechesisLevels: catechistLevelService.getAllowedLevels(user),
       catechists: [
         {
           id: user.id,
@@ -81,7 +58,7 @@ function getGroupFormOptions(user) {
   return {
     parishes,
     catechesisLevels: allLevels,
-    catechists: groupRepository.listActiveCatechists(user.role === ROLES.ADMIN ? null : user.parishId),
+    catechists: groupRepository.listActiveCatechists(isAdmin(user) ? null : user.parishId),
   };
 }
 
@@ -92,7 +69,7 @@ function getGroupForEdit(id, user) {
     return null;
   }
 
-  if (!canManageParish(user, group.parish_id)) {
+  if (!groupAuthorization.canManageGroup(user, group)) {
     return null;
   }
 
@@ -122,17 +99,20 @@ function validateReferences(input, user) {
     errors.catechistId = 'El catequista no existe, no está activo o no pertenece a la parroquia permitida.';
   }
 
+  if (
+    input.catechistId !== null
+    && !groupRepository.catechistHasLevel(input.catechistId, input.catechesisLevelId)
+  ) {
+    errors.catechistId = 'El catequista asignado no tiene acceso a ese nivel de catequesis.';
+  }
+
   return errors;
 }
 
 function buildOwnGroupInput(input, actor) {
-  const options = getGroupFormOptions(actor);
-  const allowedLevel = options.catechesisLevels[0];
-
   return {
     ...input,
     parishId: Number(actor.parishId),
-    catechesisLevelId: allowedLevel ? allowedLevel.id : Number(input.catechesisLevelId),
     catechistId: actor.id,
   };
 }
@@ -183,7 +163,18 @@ function createOwnGroup(input, actor) {
     };
   }
 
-  return createGroup(buildOwnGroupInput(input, actor), actor);
+  const ownInput = buildOwnGroupInput(input, actor);
+
+  if (!groupAuthorization.canCreateOwnGroup(actor, ownInput)) {
+    return {
+      ok: false,
+      errors: {
+        catechesisLevelId: 'No tenés permiso para crear grupos en ese nivel.',
+      },
+    };
+  }
+
+  return createGroup(ownInput, actor);
 }
 
 function updateGroup(id, input, actor) {

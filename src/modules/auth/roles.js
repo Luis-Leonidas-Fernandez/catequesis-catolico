@@ -2,13 +2,21 @@ const ROLES = {
   ADMIN: 'admin',
   COORDINADOR_ZONAL: 'coordinador_zonal',
   COORDINADOR_PARROQUIAL: 'coordinador_parroquial',
-  CATEQUISTA_FAMILIAR: 'catequista_familiar',
-  CATEQUISTA_JUVENIL: 'catequista_juvenil',
+  CATEQUISTA: 'catequista',
+  NINO: 'nino',
 };
 
-const ADMINISTRATIVE_ROLES = Object.values(ROLES);
+const USER_ROLES = [
+  ROLES.ADMIN,
+  ROLES.COORDINADOR_ZONAL,
+  ROLES.COORDINADOR_PARROQUIAL,
+  ROLES.CATEQUISTA,
+];
+
+const MANAGEABLE_USER_ROLES = USER_ROLES;
 
 module.exports = {
   ROLES,
-  ADMINISTRATIVE_ROLES,
+  MANAGEABLE_USER_ROLES,
+  USER_ROLES,
 };

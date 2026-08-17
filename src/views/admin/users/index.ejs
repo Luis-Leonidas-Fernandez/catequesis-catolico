@@ -1,6 +1,12 @@
 <%
   const totalUsers = users.length;
   const activeUsers = users.filter((item) => item.is_active).length;
+  const roleLabels = {
+    admin: 'Administrador',
+    coordinador_zonal: 'Coordinador zonal',
+    coordinador_parroquial: 'Coordinador parroquial',
+    catequista: 'Catequista',
+  };
 %>
 
 <%- include('../../layout', {
@@ -99,7 +105,7 @@
                       </div>
                     </td>
                     <td data-label="Email">${escapeHtml(item.email)}</td>
-                    <td data-label="Rol"><code>${escapeHtml(item.role)}</code></td>
+                    <td data-label="Rol"><code>${escapeHtml(roleLabels[item.role] || item.role)}</code></td>
                     <td data-label="Parroquia">${escapeHtml(item.parish_name || 'Sin parroquia')}</td>
                     <td data-label="Estado">
                       <span class="badge ${item.is_active ? 'text-bg-success' : 'text-bg-secondary'}">
@@ -119,7 +125,14 @@
                               <i class="bi bi-slash-circle me-1"></i>Desactivar
                             </button>
                           </form>
-                        ` : ''}
+                        ` : `
+                          <form action="/admin/users/${item.id}/activate" method="post">
+                            <input type="hidden" name="_csrf" value="${escapeHtml(csrfToken)}" />
+                            <button class="btn btn-sm btn-outline-success" type="submit">
+                              <i class="bi bi-arrow-clockwise me-1"></i>Reactivar
+                            </button>
+                          </form>
+                        `}
                       </div>
                     </td>
                   </tr>

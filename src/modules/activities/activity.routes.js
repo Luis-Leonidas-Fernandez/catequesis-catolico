@@ -10,7 +10,7 @@ const router = express.Router();
 router.use(
   '/admin/activities',
   requireAuth,
-  requireRole([ROLES.ADMIN, ROLES.CATEQUISTA_FAMILIAR, ROLES.CATEQUISTA_JUVENIL]),
+  requireRole([ROLES.ADMIN, ROLES.CATEQUISTA]),
 );
 
 router.get('/admin/activities', activityController.showActivities);

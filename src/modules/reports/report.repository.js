@@ -9,7 +9,7 @@ function buildReportWhere(filters, user) {
   const attemptFilters = [];
   const params = {};
 
-  if (user.role === 'catequista_familiar' || user.role === 'catequista_juvenil') {
+  if (user.role === 'catequista') {
     where.push('groups.catechist_id = @scopeCatechistId');
     params.scopeCatechistId = user.id;
   }
