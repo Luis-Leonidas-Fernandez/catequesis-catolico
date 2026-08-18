@@ -66,6 +66,18 @@
 
   const activeMode = loginModes.find((mode) => mode.isActive) || loginModes[0];
   const isChildPanelActive = activeMode.targetPanel === 'child';
+  const registrationMarkup = activeModeId === 'catequista'
+    ? `
+      <p class="login-secondary-action">
+        ¿Todavía no tenés cuenta de catequista?
+        <a href="/registro-catequista">Registrate acá</a>
+      </p>
+    `
+    : activeModeId === 'coordinador'
+      ? '<p class="login-secondary-action">El registro de coordinadores se realiza mediante una invitación segura.</p>'
+      : activeModeId === 'admin'
+        ? '<p class="login-secondary-action">La cuenta admin es creada y administrada por el sistema.</p>'
+        : '';
 
   const loginModeButtons = loginModes.map((mode) => `
     <button
@@ -176,10 +188,9 @@
             </button>
           </form>
 
-          <p class="login-secondary-action">
-            ¿Todavía no tenés cuenta de catequista?
-            <a href="/registro-catequista">Registrate acá</a>
-          </p>
+          <div data-login-registration>
+            ${registrationMarkup}
+          </div>
 
           <p class="login-admin-hint">
             Coordinadores ingresan con invitación. Admins usan su cuenta administrativa.

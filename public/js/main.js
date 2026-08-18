@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginPanels = document.querySelectorAll('[data-login-panel]');
   const loginTitle = document.querySelector('[data-login-title]');
   const loginSubtitle = document.querySelector('[data-login-subtitle]');
+  const loginRegistration = document.querySelector('[data-login-registration]');
   const routeBackButton = document.querySelector('[data-route-back]');
   const childGroupSelect = document.querySelector('[data-child-group-select]');
   const baptismalGuardians = document.querySelector('[data-baptismal-guardians]');
@@ -182,6 +183,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (loginSubtitle && button.dataset.loginSubtitle) {
           loginSubtitle.textContent = button.dataset.loginSubtitle;
+        }
+
+        if (loginRegistration) {
+          const registrationContent = {
+            catequista: '<p class="login-secondary-action">¿Todavía no tenés cuenta de catequista? <a href="/registro-catequista">Registrate acá</a></p>',
+            coordinador: '<p class="login-secondary-action">El registro de coordinadores se realiza mediante una invitación segura.</p>',
+            admin: '<p class="login-secondary-action">La cuenta admin es creada y administrada por el sistema.</p>',
+            nino: '',
+          };
+
+          loginRegistration.innerHTML = registrationContent[button.dataset.loginMode] || '';
         }
 
         const activePanel = document.querySelector(`[data-login-panel="${targetPanel}"]`);
